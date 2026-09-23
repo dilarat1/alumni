@@ -8,9 +8,54 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Ana sayfa
+// ① & ⑤ GET / → temporary main page
 app.get('/', (req, res) => {
-  res.json({ message: 'Alumni API çalışıyor 🎓' });
+  res.send(`
+    <html>
+      <head><title>Alumni</title></head>
+      <body>
+        <h1>Alumni System</h1>
+        <p>Welcome to the Alumni tracking system.</p>
+        <nav>
+          <a href="/hello">Hello</a> |
+          <a href="/about">About</a> |
+          <a href="/api/alumni">API</a>
+        </nav>
+      </body>
+    </html>
+  `);
+});
+
+// ② GET /hello → "Hello, World!"
+app.get('/hello', (req, res) => {
+  res.send('Hello, World!');
+});
+
+// ③ GET /hello/:name → "Hello, Emre!"
+app.get('/hello/:name', (req, res) => {
+  const name = req.params.name.charAt(0).toUpperCase() + req.params.name.slice(1);
+  res.send(`Hello, ${name}!`);
+});
+
+// ④ GET /sum/:number1/:number2 → returns the sum
+app.get('/sum/:number1/:number2', (req, res) => {
+  const n1 = Number(req.params.number1);
+  const n2 = Number(req.params.number2);
+  res.send(`${n1 + n2}`);
+});
+
+// ⑥ GET /about → temporary about page
+app.get('/about', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>About - Alumni</title></head>
+      <body>
+        <h1>About</h1>
+        <p>Alumni tracking system built with Node.js (Express) and MySQL.</p>
+        <a href="/">← Back to Home</a>
+      </body>
+    </html>
+  `);
 });
 
 // Tüm mezunları listele
