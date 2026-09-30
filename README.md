@@ -62,6 +62,12 @@ alumni/
 
 ### 📮 API Endpoints (Postman / JSON)
 
+#### API Documentation (Swagger)
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/swagger` | Interactive Swagger UI API documentation |
+| GET | `/api/swagger.json` | OpenAPI 3.0 JSON specification |
+
 #### Health Check
 | Method | Path | Description |
 |---|---|---|

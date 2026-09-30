@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('../swagger.json');
+
+// GET /api/swagger.json → Swagger JSON spec
+router.get('/swagger.json', (req, res) => {
+  res.json(swaggerDocument);
+});
+
+// GET /api/swagger → Interactive Swagger UI documentation
+router.use('/swagger', swaggerUi.serve);
+router.get('/swagger', swaggerUi.setup(swaggerDocument));
 
 // GET /api/health → JSON health check
 router.get('/health', async (req, res) => {

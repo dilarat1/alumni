@@ -1,0 +1,273 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Alumni & Users API",
+    "version": "1.0.0",
+    "description": "API documentation for the Alumni Management & Users System"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Returns system uptime and database connection status",
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "ok",
+                  "uptime": 12.34,
+                  "database": "connected",
+                  "timestamp": "2026-09-30T10:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "List all users",
+        "tags": ["Users"],
+        "responses": {
+          "200": {
+            "description": "A list of users"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new user",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "summary": "Get user by ID",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "User details" },
+          "404": { "description": "User not found" }
+        }
+      },
+      "put": {
+        "summary": "Full update of user (PUT)",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User updated" },
+          "404": { "description": "User not found" }
+        }
+      },
+      "patch": {
+        "summary": "Partial update of user (PATCH)",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPatchInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User partially updated" },
+          "404": { "description": "User not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete user by ID",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "User deleted" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/api/alumni": {
+      "get": {
+        "summary": "List all alumni",
+        "tags": ["Alumni"],
+        "responses": {
+          "200": { "description": "List of alumni" }
+        }
+      },
+      "post": {
+        "summary": "Add new alumni",
+        "tags": ["Alumni"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlumniInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Alumni created" }
+        }
+      }
+    },
+    "/api/alumni/{id}": {
+      "get": {
+        "summary": "Get alumni by ID",
+        "tags": ["Alumni"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Alumni details" },
+          "404": { "description": "Alumni not found" }
+        }
+      },
+      "put": {
+        "summary": "Update alumni",
+        "tags": ["Alumni"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlumniInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Alumni updated" },
+          "404": { "description": "Alumni not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete alumni",
+        "tags": ["Alumni"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Alumni deleted" },
+          "404": { "description": "Alumni not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserInput": {
+        "type": "object",
+        "required": ["username", "email", "password"],
+        "properties": {
+          "username": { "type": "string", "example": "emre" },
+          "email": { "type": "string", "example": "emre@alumni.com" },
+          "password": { "type": "string", "example": "pass123" },
+          "phone": { "type": "string", "example": "555-0001" }
+        }
+      },
+      "UserPatchInput": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "emre" },
+          "email": { "type": "string", "example": "emre@alumni.com" },
+          "password": { "type": "string", "example": "pass123" },
+          "phone": { "type": "string", "example": "555-9999" }
+        }
+      },
+      "AlumniInput": {
+        "type": "object",
+        "required": ["first_name", "last_name"],
+        "properties": {
+          "first_name": { "type": "string", "example": "Dilara" },
+          "last_name": { "type": "string", "example": "Toraman" },
+          "email": { "type": "string", "example": "dilara@example.com" },
+          "department": { "type": "string", "example": "Bilgisayar Mühendisliği" },
+          "graduation_year": { "type": "integer", "example": 2026 }
+        }
+      }
+    }
+  }
+}
