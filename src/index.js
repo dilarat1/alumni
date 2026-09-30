@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require('./db');
+
+const pageRoutes = require('./routes/pages');
+const userRoutes = require('./routes/users');
+const apiRoutes = require('./routes/api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,197 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ① & ⑤ GET / → temporary main page
-app.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>Alumni</title></head>
-      <body>
-        <h1>Alumni System</h1>
-        <p>Welcome to the Alumni tracking system.</p>
-        <nav>
-          <a href="/hello">Hello</a> |
-          <a href="/about">About</a> |
-          <a href="/api/alumni">API</a>
-        </nav>
-      </body>
-    </html>
-  `);
-});
+// Web pages
+app.use('/', pageRoutes);
 
-// ② GET /hello → "Hello, World!"
-app.get('/hello', (req, res) => {
-  res.send('Hello, World!');
-});
+// Users HTML page
+app.use('/users', userRoutes);
 
-// ③ GET /hello/:name → "Hello, Emre!"
-app.get('/hello/:name', (req, res) => {
-  const name = req.params.name.charAt(0).toUpperCase() + req.params.name.slice(1);
-  res.send(`Hello, ${name}!`);
-});
-
-// ④ GET /sum/:number1/:number2 → returns the sum
-app.get('/sum/:number1/:number2', (req, res) => {
-  const n1 = Number(req.params.number1);
-  const n2 = Number(req.params.number2);
-  res.send(`${n1 + n2}`);
-});
-
-// ⑥ GET /about → temporary about page
-app.get('/about', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>About - Alumni</title></head>
-      <body>
-        <h1>About</h1>
-        <p>Alumni tracking system built with Node.js (Express) and MySQL.</p>
-        <a href="/">← Back to Home</a>
-      </body>
-    </html>
-  `);
-});
-
-// GET /api/health → JSON health check
-app.get('/api/health', async (req, res) => {
-  let dbStatus = 'disconnected';
-  try {
-    await pool.query('SELECT 1');
-    dbStatus = 'connected';
-  } catch (err) {
-    dbStatus = 'error: ' + err.message;
-  }
-
-  res.json({
-    status: dbStatus === 'connected' ? 'ok' : 'error',
-    uptime: process.uptime(),
-    database: dbStatus,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Tüm mezunları listele
-app.get('/api/alumni', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM alumni ORDER BY id');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Tek mezun getir
-app.get('/api/alumni/:id', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM alumni WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Mezun bulunamadı' });
-    res.json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Yeni mezun ekle
-app.post('/api/alumni', async (req, res) => {
-  try {
-    const { first_name, last_name, email, department, graduation_year } = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO alumni (first_name, last_name, email, department, graduation_year) VALUES (?, ?, ?, ?, ?)',
-      [first_name, last_name, email, department, graduation_year]
-    );
-    res.status(201).json({ id: result.insertId, ...req.body });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Mezun güncelle
-app.put('/api/alumni/:id', async (req, res) => {
-  try {
-    const { first_name, last_name, email, department, graduation_year } = req.body;
-    const [result] = await pool.query(
-      'UPDATE alumni SET first_name = ?, last_name = ?, email = ?, department = ?, graduation_year = ? WHERE id = ?',
-      [first_name, last_name, email, department, graduation_year, req.params.id]
-    );
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Mezun bulunamadı' });
-    res.json({ id: parseInt(req.params.id), ...req.body });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Mezun sil
-app.delete('/api/alumni/:id', async (req, res) => {
-  try {
-    const [result] = await pool.query('DELETE FROM alumni WHERE id = ?', [req.params.id]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Mezun bulunamadı' });
-    res.json({ message: 'Mezun silindi' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ==================== USERS API ====================
-
-// GET /api/users → List all users
-app.get('/api/users', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users ORDER BY id');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/users/:id → Get single user
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
-    res.json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/users → Create new user
-app.post('/api/users', async (req, res) => {
-  try {
-    const { username, email, password, phone } = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO users (username, email, password, phone) VALUES (?, ?, ?, ?)',
-      [username, email, password, phone]
-    );
-    res.status(201).json({ id: result.insertId, username, email, phone });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// PUT /api/users/:id → Update user
-app.put('/api/users/:id', async (req, res) => {
-  try {
-    const { username, email, password, phone } = req.body;
-    const [result] = await pool.query(
-      'UPDATE users SET username = ?, email = ?, password = ?, phone = ? WHERE id = ?',
-      [username, email, password, phone, req.params.id]
-    );
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
-    res.json({ id: parseInt(req.params.id), username, email, phone });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// DELETE /api/users/:id → Delete user
-app.delete('/api/users/:id', async (req, res) => {
-  try {
-    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
-    res.json({ message: 'User deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// API endpoints (JSON)
+app.use('/api', apiRoutes);
 
 app.listen(PORT, () => {
   console.log(`🎓 Alumni API http://localhost:${PORT} adresinde çalışıyor`);
