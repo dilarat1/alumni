@@ -58,6 +58,24 @@ app.get('/about', (req, res) => {
   `);
 });
 
+// GET /api/health → JSON health check
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    await pool.query('SELECT 1');
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'error: ' + err.message;
+  }
+
+  res.json({
+    status: dbStatus === 'connected' ? 'ok' : 'error',
+    uptime: process.uptime(),
+    database: dbStatus,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Tüm mezunları listele
 app.get('/api/alumni', async (req, res) => {
   try {
