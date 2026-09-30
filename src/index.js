@@ -137,6 +137,69 @@ app.delete('/api/alumni/:id', async (req, res) => {
   }
 });
 
+// ==================== USERS API ====================
+
+// GET /api/users → List all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users ORDER BY id');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/users/:id → Get single user
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/users → Create new user
+app.post('/api/users', async (req, res) => {
+  try {
+    const { username, email, password, phone } = req.body;
+    const [result] = await pool.query(
+      'INSERT INTO users (username, email, password, phone) VALUES (?, ?, ?, ?)',
+      [username, email, password, phone]
+    );
+    res.status(201).json({ id: result.insertId, username, email, phone });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/users/:id → Update user
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const { username, email, password, phone } = req.body;
+    const [result] = await pool.query(
+      'UPDATE users SET username = ?, email = ?, password = ?, phone = ? WHERE id = ?',
+      [username, email, password, phone, req.params.id]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ id: parseInt(req.params.id), username, email, phone });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/users/:id → Delete user
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🎓 Alumni API http://localhost:${PORT} adresinde çalışıyor`);
 });
