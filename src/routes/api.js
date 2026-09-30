@@ -116,16 +116,50 @@ router.post('/users', async (req, res) => {
   }
 });
 
-// PUT /api/users/:id → Update user
+// PUT /api/users/:id → Full update (tüm alanlar beklenir)
 router.put('/users/:id', async (req, res) => {
   try {
     const { username, email, password, phone } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'PUT requires full data: username, email, and password' });
+    }
     const [result] = await pool.query(
       'UPDATE users SET username = ?, email = ?, password = ?, phone = ? WHERE id = ?',
-      [username, email, password, phone, req.params.id]
+      [username, email, password, phone || null, req.params.id]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
     res.json({ id: parseInt(req.params.id), username, email, phone });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/users/:id → Partial update (sadece gönderilen alanlar güncellenir)
+router.patch('/users/:id', async (req, res) => {
+  try {
+    const allowedFields = ['username', 'email', 'password', 'phone'];
+    const updates = [];
+    const values = [];
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates.push(`${field} = ?`);
+        values.push(req.body[field]);
+      }
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields provided for PATCH update' });
+    }
+
+    values.push(req.params.id);
+    const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+    const [result] = await pool.query(sql, values);
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+
+    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users WHERE id = ?', [req.params.id]);
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
