@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements (Homework) | Alumni System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      padding: 30px 20px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .badge-hw {
+      display: inline-block;
+      background: #ede7f6;
+      color: #512da8;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .subtitle { color: #666; margin-bottom: 24px; line-height: 1.6; }
+    .nav-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .nav-bar a {
+      background: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #512da8;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: all 0.2s;
+    }
+    .nav-bar a.active {
+      background: #512da8;
+      color: white;
+    }
+    .nav-bar a:hover { transform: translateY(-1px); }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .announcement-item {
+      border-left: 4px solid #512da8;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      background: #fafbfc;
+      border-radius: 0 10px 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .announcement-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+    .announcement-content {
+      color: #444;
+      line-height: 1.5;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .announcement-meta {
+      font-size: 12px;
+      color: #888;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .cat-tag {
+      background: #e8eaf6;
+      color: #283593;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-edit, .btn-delete, .btn-submit {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-edit { background: #fff3e0; color: #e65100; }
+    .btn-edit:hover { background: #ffe0b2; }
+    .btn-delete { background: #ffebee; color: #c62828; }
+    .btn-delete:hover { background: #ffcdd2; }
+    .btn-submit {
+      background: #512da8;
+      color: white;
+      padding: 10px 18px;
+      font-size: 15px;
+    }
+    .btn-submit:hover { background: #311b92; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #444; }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #dcdfe6;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #512da8; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 520px;
+      width: 90%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge-hw">📝 Homework &bull; Announcements MVC Interface</span>
+    <h1>📢 Announcement Management</h1>
+    <p class="subtitle">
+      Management interface for university and alumni announcements, built using the <strong>Announcement Model &amp; Controller</strong> without a database.
+    </p>
+
+    <div class="nav-bar">
+      <a href="/users">👥 Users</a>
+      <a href="/announcements" class="active">📢 Announcements</a>
+      <a href="/api/swagger">📄 Swagger API Docs</a>
+      <a href="/api/announcements" target="_blank">⚡ JSON API (/api/announcements)</a>
+    </div>
+
+    <!-- READ: Announcements List -->
+    <div class="card">
+      <h2 style="font-size: 19px; margin-bottom: 16px;">Active Announcements (Read)</h2>
+      <% if (announcements.length === 0) { %>
+        <p style="color: #999;">No announcements posted yet.</p>
+      <% } else { %>
+        <% announcements.forEach(function(a) { %>
+          <div class="announcement-item">
+            <div style="flex-grow: 1;">
+              <div class="announcement-title">
+                <span class="cat-tag"><%= a.category %></span> <%= a.title %>
+              </div>
+              <div class="announcement-content"><%= a.content %></div>
+              <div class="announcement-meta">
+                <span>✍️ Author: <strong><%= a.author %></strong></span>
+                <span>📅 <%= new Date(a.created_at).toLocaleDateString() %></span>
+                <span>🆔 #<%= a.id %></span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn-edit" onclick="openEditModal(<%= a.id %>, '<%= a.title.replace(/'/g, "\\'") %>', '<%= a.content.replace(/'/g, "\\'") %>', '<%= a.category %>', '<%= a.author %>')">✏️ Edit</button>
+              <form action="/announcements/<%= a.id %>/delete" method="POST" onsubmit="return confirm('Delete this announcement?');">
+                <button type="submit" class="btn-delete">🗑️ Delete</button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+
+    <!-- CREATE: New Announcement Form -->
+    <div class="card">
+      <h2 style="font-size: 19px;">➕ Post New Announcement (Create)</h2>
+      <form action="/announcements" method="POST">
+        <div class="form-grid">
+          <div>
+            <label>Announcement Title</label>
+            <input type="text" name="title" placeholder="e.g. Annual Alumni Gala 2026" required>
+          </div>
+          <div>
+            <label>Category</label>
+            <select name="category">
+              <option value="General">General</option>
+              <option value="Event">Event</option>
+              <option value="Career">Career</option>
+              <option value="Mentorship">Mentorship</option>
+            </select>
+          </div>
+          <div>
+            <label>Author / Department</label>
+            <input type="text" name="author" placeholder="e.g. Alumni Office" required>
+          </div>
+        </div>
+        <div style="margin-top: 14px;">
+          <label>Announcement Content</label>
+          <textarea name="content" rows="3" placeholder="Provide details of the announcement..." required></textarea>
+        </div>
+        <div style="margin-top: 18px;">
+          <button type="submit" class="btn-submit">Post Announcement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- UPDATE Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h2 style="font-size: 20px; margin-bottom: 14px;">Edit Announcement (Update)</h2>
+      <form id="editForm" method="POST">
+        <div style="margin-bottom: 12px;">
+          <label>Title</label>
+          <input type="text" id="editTitle" name="title" required>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label>Category</label>
+          <select id="editCategory" name="category">
+            <option value="General">General</option>
+            <option value="Event">Event</option>
+            <option value="Career">Career</option>
+            <option value="Mentorship">Mentorship</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label>Author</label>
+          <input type="text" id="editAuthor" name="author" required>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label>Content</label>
+          <textarea id="editContent" name="content" rows="3" required></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button type="submit" class="btn-submit">Save Changes</button>
+          <button type="button" class="btn-delete" onclick="closeEditModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openEditModal(id, title, content, category, author) {
+      document.getElementById('editForm').action = '/announcements/' + id + '/update';
+      document.getElementById('editTitle').value = title;
+      document.getElementById('editContent').value = content;
+      document.getElementById('editCategory').value = category;
+      document.getElementById('editAuthor').value = author;
+      document.getElementById('editModal').style.display = 'flex';
+    }
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

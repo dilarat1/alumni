@@ -1,93 +1,125 @@
-# Alumni
+# Alumni Management System
 
-A web application for tracking university graduates and system users. Manages alumni contact information, graduation years, and user accounts.
-
-## What Does the System Do?
-
-- **Web Interface:** Interactive and styled web pages for viewing users and testing navigation.
-- **Users Management:** Full CRUD operations (GET, POST, PUT, PATCH, DELETE) with MySQL storage.
-- **Alumni Management:** Track alumni records, departments, and graduation years.
-- **Health Check:** Live monitoring of API and database status.
-- **RESTful API:** Clean separation between web pages (`/users`, `/about`) and JSON API endpoints (`/api/...`).
-
-## Technology Choices
-
-| Technology | Choice | Why? |
-|------------|--------|------|
-| **Back-end Language** | Node.js (Express) | Large JavaScript ecosystem, enables rapid prototyping, modular routing |
-| **Database** | MySQL | Robust relational database, ideal for users and alumni relationships |
-| **Container** | Docker Compose | Single-command deployment (`docker compose up`) with health checks |
-
-## How to Run
-
-One command brings up both the Express app and the MySQL database:
-
-```bash
-docker compose up
-```
-
-The application will start running at `http://localhost:3000`.
-
-## Project Structure
-
-```
-alumni/
-├── docker-compose.yml    # Orchestrates Express app & MySQL services
-├── Dockerfile            # Container configuration for Node.js
-├── package.json          # Node dependencies
-├── init.sql              # Database schema & sample seed data
-├── src/
-│   ├── index.js          # App entry point & router mounting
-│   ├── db.js             # MySQL connection pool
-│   └── routes/
-│       ├── pages.js      # Web pages (/, /about, /hello, /sum)
-│       ├── users.js      # Styled web interface for /users
-│       └── api.js        # JSON API routes (/api/health, /api/users, /api/alumni)
-```
+A web application for university alumni, users, and announcements tracking built with **Express.js**, **EJS**, **MySQL**, and **Docker**.
 
 ---
 
-## Endpoints
+## 🏛️ MVC Architecture Documentation
 
-### 🌐 Web Pages (Browser)
+The project strictly follows the **Model-View-Controller (MVC)** architectural design pattern to ensure clean separation of concerns between business logic, presentation, and routing.
 
-| Method | Path | Description |
+```
+alumni/
+├── docker-compose.yml             # Container orchestration (App & MySQL)
+├── Dockerfile                     # Node.js Alpine runtime image
+├── package.json                   # Dependencies (express, ejs, swagger-ui-express, mysql2, cors)
+├── init.sql                       # Database initial schema & seeds
+├── src/
+│   ├── index.js                   # Application entry point, view engine setup, middleware & routing
+│   ├── db.js                      # MySQL connection pool
+│   ├── swagger.json               # OpenAPI 3.0 specification for API & Views
+│   │
+│   ├── models/                    # 📦 MODEL LAYER (Business Logic & Data Storage)
+│   │   ├── User.js                # User model (In-memory CRUD without database connection)
+│   │   └── Announcement.js        # Announcement model (In-memory CRUD without database connection - Homework)
+│   │
+│   ├── views/                     # 👁️ VIEW LAYER (User Interface Templates)
+│   │   ├── users/
+│   │   │   └── index.ejs          # EJS template for Users listings, create form, edit & delete
+│   │   └── announcements/
+│   │       └── index.ejs          # EJS template for Announcements management interface (Homework)
+│   │
+│   ├── controllers/               # ⚙️ CONTROLLER LAYER (Request Handling & Coordination)
+│   │   ├── UserController.js              # Web view controller for /users
+│   │   ├── ApiUserController.js          # REST API controller for /api/users
+│   │   ├── AnnouncementController.js      # Web view controller for /announcements (Homework)
+│   │   └── ApiAnnouncementController.js  # REST API controller for /api/announcements (Homework)
+│   │
+│   └── routes/                    # 🛣️ ROUTE LAYER (URL mapping to Controllers)
+│       ├── userRoutes.js          # Web routes for /users (View layer)
+│       ├── apiUserRoutes.js      # REST API routes for /api/users (JSON)
+│       ├── announcementRoutes.js  # Web routes for /announcements (View layer - Homework)
+│       ├── apiAnnouncementRoutes.js # REST API routes for /api/announcements (JSON - Homework)
+│       ├── pages.js               # General web routes (/, /about, /hello, /sum)
+│       └── api.js                 # API mounting & Swagger documentation router
+```
+
+### Detailed Layer Descriptions
+
+#### 1. Model Layer (`src/models/`)
+- **`User.js`**: Implements complete in-memory CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) without database dependency.
+- **`Announcement.js`** *(Homework)*: Implements complete in-memory CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) for campus & alumni announcements.
+
+#### 2. Controller Layer (`src/controllers/`)
+- **`UserController.js`**: Handles user web views; fetches data from `UserModel` and renders `views/users/index.ejs`.
+- **`ApiUserController.js`**: Handles JSON API endpoints for user management; interacts with `UserModel` and returns standard HTTP responses (`200 OK`, `201 Created`, `404 Not Found`).
+- **`AnnouncementController.js`** *(Homework)*: Handles announcement web views and form submissions, rendering `views/announcements/index.ejs`.
+- **`ApiAnnouncementController.js`** *(Homework)*: Handles JSON API CRUD operations on announcements.
+
+#### 3. View Layer (`src/views/`)
+- **`users/index.ejs`**: Server-side rendered interface displaying users in a table, an "Add User" form (Create), an edit modal (Update), and delete action (Delete).
+- **`announcements/index.ejs`** *(Homework)*: Management interface displaying categorized announcements, a "Post Announcement" form (Create), an inline update modal (Update), and delete action (Delete).
+
+#### 4. Route Layer (`src/routes/`)
+- Maps incoming HTTP requests to their corresponding controller methods. Each domain has separate view routes and API routes.
+
+---
+
+## 🚀 How to Run
+
+Run the entire application with a single command:
+
+```bash
+docker compose up --build
+```
+
+The application will be available at: **`http://localhost:3000`**
+
+---
+
+## 🌐 Endpoints & Pages
+
+### 1. View Layer (Web Interfaces in Browser)
+| Method | Route | Description |
 |---|---|---|
-| GET | `/` | Home page |
-| GET | `/users` | Styled web interface displaying registered users + quick add form |
-| GET | `/about` | About page |
-| GET | `/hello` | Returns "Hello, World!" |
-| GET | `/hello/:name` | Dynamic greeting (e.g. `/hello/emre` → "Hello, Emre!") |
-| GET | `/sum/:n1/:n2` | Calculates sum of two numbers (e.g. `/sum/10/25` → 35) |
+| GET | `/` | Home page with navigation links |
+| GET | `/users` | **Users Management Interface (MVC View Layer)** |
+| POST | `/users` | Create user from HTML form |
+| POST | `/users/:id/update` | Update user from HTML form |
+| POST | `/users/:id/delete` | Delete user from HTML form |
+| GET | `/announcements` | **Announcements Management Interface (Homework)** |
+| POST | `/announcements` | Create announcement from HTML form |
+| POST | `/announcements/:id/update` | Update announcement from HTML form |
+| POST | `/announcements/:id/delete` | Delete announcement from HTML form |
+| GET | `/hello` | Hello, World! greeting |
+| GET | `/hello/:name` | Dynamic greeting (e.g. `/hello/emre`) |
+| GET | `/sum/:n1/:n2` | Sum calculator (e.g. `/sum/10/20` → 30) |
+| GET | `/about` | About system page |
 
-### 📮 API Endpoints (Postman / JSON)
-
-#### API Documentation (Swagger)
-| Method | Path | Description |
+### 2. Swagger Documentation
+| Method | Route | Description |
 |---|---|---|
-| GET | `/api/swagger` | Interactive Swagger UI API documentation |
-| GET | `/api/swagger.json` | OpenAPI 3.0 JSON specification |
+| GET | `/api/swagger` | **Interactive Swagger UI (OpenAPI 3.0)** |
+| GET | `/api/swagger.json` | OpenAPI JSON schema |
 
-#### Health Check
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/health` | Returns server uptime & database connection status |
+### 3. REST API Endpoints (JSON / Postman / Swagger)
 
 #### Users API (`/api/users`)
-| Method | Path | Description | Sample Body |
-|---|---|---|---|
-| GET | `/api/users` | List all users | - |
-| GET | `/api/users/:id` | Get single user by ID | - |
-| POST | `/api/users` | Create new user | `{"username":"emre","email":"emre@alumni.com","password":"123","phone":"555-0001"}` |
-| PUT | `/api/users/:id` | Full update (requires all fields) | `{"username":"emre_new","email":"emre@alumni.com","password":"123","phone":"555-9999"}` |
-| PATCH | `/api/users/:id` | Partial update (updates only provided fields) | `{"phone":"555-8888"}` |
-| DELETE | `/api/users/:id` | Delete user by ID | - |
+- `GET /api/users` - List all users
+- `GET /api/users/:id` - Get user by ID
+- `POST /api/users` - Create user
+- `PUT /api/users/:id` - Full update (all fields required)
+- `PATCH /api/users/:id` - Partial update (only sent fields)
+- `DELETE /api/users/:id` - Delete user
 
-#### Alumni API (`/api/alumni`)
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/alumni` | List all alumni records |
-| GET | `/api/alumni/:id` | Get single alumni by ID |
-| POST | `/api/alumni` | Add new alumni record |
-| PUT | `/api/alumni/:id` | Update alumni record |
-| DELETE | `/api/alumni/:id` | Delete alumni record |
+#### Announcements API (`/api/announcements` - Homework)
+- `GET /api/announcements` - List all announcements
+- `GET /api/announcements/:id` - Get announcement by ID
+- `POST /api/announcements` - Create announcement
+- `PUT /api/announcements/:id` - Full update announcement
+- `PATCH /api/announcements/:id` - Partial update announcement
+- `DELETE /api/announcements/:id` - Delete announcement
+
+#### System & Alumni
+- `GET /api/health` - Server uptime & database health check
+- `GET /api/alumni` - Alumni listings

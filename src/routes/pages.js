@@ -10,8 +10,9 @@ router.get('/', (req, res) => {
         <h1>Alumni System</h1>
         <p>Welcome to the Alumni tracking system.</p>
         <nav>
-          <a href="/users">Users</a> |
-          <a href="/hello">Hello</a> |
+          <a href="/users">Users (MVC View)</a> |
+          <a href="/announcements">Announcements (Homework)</a> |
+          <a href="/api/swagger">Swagger Docs</a> |
           <a href="/about">About</a> |
           <a href="/api/health">API Health</a>
         </nav>

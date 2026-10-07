@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Alumni & Users API",
+    "title": "Alumni, Users & Announcements MVC API",
     "version": "1.0.0",
-    "description": "API documentation for the Alumni Management & Users System"
+    "description": "API documentation with MVC architecture for Users, Alumni, and Announcements (Homework)"
   },
   "servers": [
     {
@@ -12,9 +12,46 @@
     }
   ],
   "paths": {
+    "/users": {
+      "get": {
+        "summary": "Users HTML View (Listings)",
+        "tags": ["View Layer (/users)"],
+        "description": "Renders EJS view with list of all users and add user form",
+        "responses": {
+          "200": { "description": "HTML web page" }
+        }
+      },
+      "post": {
+        "summary": "Create user from HTML form",
+        "tags": ["View Layer (/users)"],
+        "description": "Processes form submission and redirects to /users",
+        "responses": {
+          "302": { "description": "Redirects to /users" }
+        }
+      }
+    },
+    "/announcements": {
+      "get": {
+        "summary": "Announcements HTML View (Homework)",
+        "tags": ["View Layer (/announcements)"],
+        "description": "Renders EJS view with list of active announcements and post form",
+        "responses": {
+          "200": { "description": "HTML web page" }
+        }
+      },
+      "post": {
+        "summary": "Create announcement from HTML form",
+        "tags": ["View Layer (/announcements)"],
+        "description": "Processes form submission and redirects to /announcements",
+        "responses": {
+          "302": { "description": "Redirects to /announcements" }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "summary": "Health Check",
+        "tags": ["System"],
         "description": "Returns system uptime and database connection status",
         "responses": {
           "200": {
@@ -25,7 +62,7 @@
                   "status": "ok",
                   "uptime": 12.34,
                   "database": "connected",
-                  "timestamp": "2026-09-30T10:00:00.000Z"
+                  "timestamp": "2026-10-07T10:00:00.000Z"
                 }
               }
             }
@@ -35,45 +72,34 @@
     },
     "/api/users": {
       "get": {
-        "summary": "List all users",
-        "tags": ["Users"],
+        "summary": "List all users (JSON)",
+        "tags": ["API Users (/api/users)"],
         "responses": {
-          "200": {
-            "description": "A list of users"
-          }
+          "200": { "description": "A list of users" }
         }
       },
       "post": {
-        "summary": "Create a new user",
-        "tags": ["Users"],
+        "summary": "Create a new user (JSON)",
+        "tags": ["API Users (/api/users)"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserInput"
-              }
+              "schema": { "$ref": "#/components/schemas/UserInput" }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "User created"
-          }
+          "201": { "description": "User created" }
         }
       }
     },
     "/api/users/{id}": {
       "get": {
         "summary": "Get user by ID",
-        "tags": ["Users"],
+        "tags": ["API Users (/api/users)"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
           "200": { "description": "User details" },
@@ -82,22 +108,15 @@
       },
       "put": {
         "summary": "Full update of user (PUT)",
-        "tags": ["Users"],
+        "tags": ["API Users (/api/users)"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserInput"
-              }
+              "schema": { "$ref": "#/components/schemas/UserInput" }
             }
           }
         },
@@ -108,22 +127,15 @@
       },
       "patch": {
         "summary": "Partial update of user (PATCH)",
-        "tags": ["Users"],
+        "tags": ["API Users (/api/users)"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserPatchInput"
-              }
+              "schema": { "$ref": "#/components/schemas/UserPatchInput" }
             }
           }
         },
@@ -134,18 +146,99 @@
       },
       "delete": {
         "summary": "Delete user by ID",
-        "tags": ["Users"],
+        "tags": ["API Users (/api/users)"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
           "200": { "description": "User deleted" },
           "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/api/announcements": {
+      "get": {
+        "summary": "List all announcements (JSON)",
+        "tags": ["API Announcements (/api/announcements)"],
+        "responses": {
+          "200": { "description": "List of announcements" }
+        }
+      },
+      "post": {
+        "summary": "Create announcement (JSON)",
+        "tags": ["API Announcements (/api/announcements)"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AnnouncementInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Announcement created" }
+        }
+      }
+    },
+    "/api/announcements/{id}": {
+      "get": {
+        "summary": "Get announcement by ID",
+        "tags": ["API Announcements (/api/announcements)"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Announcement details" },
+          "404": { "description": "Announcement not found" }
+        }
+      },
+      "put": {
+        "summary": "Full update announcement (PUT)",
+        "tags": ["API Announcements (/api/announcements)"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AnnouncementInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Announcement updated" },
+          "404": { "description": "Announcement not found" }
+        }
+      },
+      "patch": {
+        "summary": "Partial update announcement (PATCH)",
+        "tags": ["API Announcements (/api/announcements)"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AnnouncementPatchInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Announcement partially updated" },
+          "404": { "description": "Announcement not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete announcement by ID",
+        "tags": ["API Announcements (/api/announcements)"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Announcement deleted" },
+          "404": { "description": "Announcement not found" }
         }
       }
     },
@@ -164,9 +257,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlumniInput"
-              }
+              "schema": { "$ref": "#/components/schemas/AlumniInput" }
             }
           }
         },
@@ -180,12 +271,7 @@
         "summary": "Get alumni by ID",
         "tags": ["Alumni"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
           "200": { "description": "Alumni details" },
@@ -196,20 +282,13 @@
         "summary": "Update alumni",
         "tags": ["Alumni"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlumniInput"
-              }
+              "schema": { "$ref": "#/components/schemas/AlumniInput" }
             }
           }
         },
@@ -222,12 +301,7 @@
         "summary": "Delete alumni",
         "tags": ["Alumni"],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
           "200": { "description": "Alumni deleted" },
@@ -255,6 +329,25 @@
           "email": { "type": "string", "example": "emre@alumni.com" },
           "password": { "type": "string", "example": "pass123" },
           "phone": { "type": "string", "example": "555-9999" }
+        }
+      },
+      "AnnouncementInput": {
+        "type": "object",
+        "required": ["title", "content"],
+        "properties": {
+          "title": { "type": "string", "example": "Annual Alumni Gala 2026" },
+          "content": { "type": "string", "example": "Join us on campus for networking and dinner." },
+          "category": { "type": "string", "example": "Event" },
+          "author": { "type": "string", "example": "Rectorate" }
+        }
+      },
+      "AnnouncementPatchInput": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Updated Gala Title" },
+          "content": { "type": "string", "example": "Updated announcement details." },
+          "category": { "type": "string", "example": "Event" },
+          "author": { "type": "string", "example": "Alumni Office" }
         }
       },
       "AlumniInput": {
