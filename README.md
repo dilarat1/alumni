@@ -95,6 +95,23 @@ Migration files located in `migrations/`:
 - `002_create_users_table.sql`
 - `003_create_announcements_table.sql`
 
+### 🌱 Database Seeding & Factory Pattern
+
+Populate the database with realistic mock data using dedicated **Factory classes**:
+
+```bash
+# Inside docker container:
+docker compose exec app npm run seed
+
+# Or directly locally:
+npm run seed
+```
+
+**Factory Classes (`src/factories/`):**
+- `UserFactory.js`: Generates random user accounts with usernames, emails, and phone numbers.
+- `AlumniFactory.js`: Generates alumni records with departments and graduation years.
+- `AnnouncementFactory.js`: Generates campus bulletins with categories and issuing offices.
+
 ---
 
 ## 🌐 Endpoints & Pages

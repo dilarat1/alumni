@@ -178,3 +178,21 @@ docker compose exec app npm run migrate
 ```
 The migration runner checks the registry and applies only unexecuted scripts in numerical sequence.
 
+---
+
+## 🏭 8. Model Factories & Data Seeding Strategy
+
+To test API workflows and populate views with realistic data without manual database entry, the application implements the **Model Factory Pattern**.
+
+### 8.1. Factory Classes (`src/factories/`)
+- **`UserFactory`**: Generates randomized usernames, RFC-compliant emails, hashed test passwords, and formatted phone numbers.
+- **`AlumniFactory`**: Generates graduate profiles with realistic Turkish/international names, accredited university departments, and graduation years.
+- **`AnnouncementFactory`**: Generates institutional notices categorized across `Event`, `Career`, `Mentorship`, and `General`.
+
+### 8.2. Seeder Script & Execution
+The seeder connects to MySQL, instantiates the factories, and inserts records idempotently:
+
+```bash
+docker compose exec app npm run seed
+```
+
