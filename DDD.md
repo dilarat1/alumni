@@ -1,83 +1,79 @@
 # Data Design Documentation (DDD)
 
-## 📌 1. Project Overview & Objective
+## 📌 1. Overview & Scope
 
-This document defines the **Data Design Documentation (DDD)** for the **Alumni Management System**. It specifies the data models, storage mechanisms, lifecycle of records, relational schemas, and persistence strategies across containerized environments.
+This document specifies the **Data Design Documentation (DDD)** for the **Alumni Management System**. It outlines the conceptual, logical, and physical data architecture, relational schemas, entity relationships, integrity constraints, and persistence strategies.
 
 ---
 
-## 🔬 2. Persistence Analysis: "The Forgetting Test"
+## 🏗️ 2. Storage & Persistence Architecture
 
-During system verification, the **Forgetting Test** was executed to evaluate data durability:
-
-1. **Test Execution:**
-   - Create a new record via the user interface or API.
-   - Execute `docker compose down` (terminates containers and cleans process memory).
-   - Execute `docker compose up -d` (restarts services).
-   - Query the record list.
-
-2. **Findings & Principle:**
-   - **In-Memory Storage (Ephemeral):** Records stored solely in process RAM (e.g., JavaScript memory arrays) are **lost/forgotten** upon restart. Hardcoded seed data reappears because it is re-initialized by the class constructor.
-   - **Database with Docker Volumes (Persistent):** Records stored in the relational database (MySQL) mapped to a Docker named volume (`db_data`) persist permanently across container stops, restarts, and re-deployments.
+The system utilizes a containerized relational database architecture designed for high integrity and durable storage across application lifecycles.
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   IN-MEMORY (EPHEMERAL)                │
-│  HTTP Request ──► Controller ──► Model (RAM Array)     │
-│  * Container Restart ──► DATA IS LOST (FORGOTTEN)      │
-└────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────┐
-│                 PERSISTENT (DATABASE + VOLUME)         │
-│  HTTP Request ──► Controller ──► Model ──► MySQL       │
-│                                              │         │
-│                                    Docker Volume       │
-│                                     (db_data disk)     │
-│  * Container Restart ──► DATA IS PRESERVED             │
+│                   APPLICATION TIER                     │
+│  Express.js Engine ──► MVC Controller ──► Data Models  │
+└───────────────────────────┬────────────────────────────┘
+                            │ SQL Queries (mysql2 pool)
+┌───────────────────────────▼────────────────────────────┐
+│                    DATABASE TIER                       │
+│  MySQL 8.0 Engine (InnoDB)                             │
+│  Database Name: alumni_db                              │
+└───────────────────────────┬────────────────────────────┘
+                            │ Persistent Block Storage
+┌───────────────────────────▼────────────────────────────┐
+│                    STORAGE TIER                        │
+│  Docker Volume: db_data (/var/lib/mysql)               │
+│  * Ensures complete non-volatile data persistence       │
 └────────────────────────────────────────────────────────┘
 ```
+
+- **Database Engine:** MySQL 8.0 (InnoDB storage engine supporting ACID transactions and relational constraints).
+- **Persistence Mechanism:** Named Docker volume (`db_data`) mapped to `/var/lib/mysql` guarantees permanent data retention across container lifecycle events.
+- **Connection Management:** Connection pool (`mysql2/promise`) configured with environment-based configuration parameters.
 
 ---
 
 ## 🗄️ 3. Entity Definitions & Schema Specifications
 
-The system operates around three core data entities: **Users**, **Alumni**, and **Announcements**.
+The database schema consists of three primary tables: `users`, `alumni`, and `announcements`.
 
 ### 3.1. Users Entity (`users` table)
-Stores registered users, administrative accounts, and authentication attributes.
+Maintains user credentials, administrative accounts, and contact identities.
 
-| Field Name | Data Type | Constraints | Description |
+| Column Name | Data Type | Key / Constraint | Description |
 |---|---|---|---|
-| `id` | `INT` | `PRIMARY KEY`, `AUTO_INCREMENT` | Unique identifier for each user |
-| `username` | `VARCHAR(50)` | `NOT NULL`, `UNIQUE` | Unique handle/login username |
-| `email` | `VARCHAR(150)` | `NOT NULL`, `UNIQUE` | Unique user email address |
-| `password` | `VARCHAR(255)` | `NOT NULL` | Account password |
-| `phone` | `VARCHAR(20)` | `NULLABLE` | Contact telephone number |
-| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | Account creation timestamp |
+| `id` | `INT` | `PK`, `AUTO_INCREMENT` | Unique numeric identifier for the user |
+| `username` | `VARCHAR(50)` | `NOT NULL`, `UNIQUE` | Unique user handle / authentication username |
+| `email` | `VARCHAR(150)` | `NOT NULL`, `UNIQUE` | Unique email address for communication |
+| `password` | `VARCHAR(255)` | `NOT NULL` | Hashed password string |
+| `phone` | `VARCHAR(20)` | `NULL` | Optional contact telephone number |
+| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | System record creation timestamp |
 
 ### 3.2. Alumni Entity (`alumni` table)
-Stores university graduates, academic records, and department associations.
+Maintains graduate records, departments, and academic completion milestones.
 
-| Field Name | Data Type | Constraints | Description |
+| Column Name | Data Type | Key / Constraint | Description |
 |---|---|---|---|
-| `id` | `INT` | `PRIMARY KEY`, `AUTO_INCREMENT` | Unique identifier for alumni entry |
-| `first_name` | `VARCHAR(100)` | `NOT NULL` | First name of graduate |
-| `last_name` | `VARCHAR(100)` | `NOT NULL` | Last name of graduate |
-| `email` | `VARCHAR(150)` | `NULLABLE` | Contact email address |
-| `department` | `VARCHAR(150)` | `NULLABLE` | Graduated academic department |
-| `graduation_year`| `INT` | `NULLABLE` | Calendar year of graduation (e.g., 2024) |
-| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | Record registration timestamp |
+| `id` | `INT` | `PK`, `AUTO_INCREMENT` | Unique identifier for alumni record |
+| `first_name` | `VARCHAR(100)` | `NOT NULL` | Legal first name of graduate |
+| `last_name` | `VARCHAR(100)` | `NOT NULL` | Legal last name of graduate |
+| `email` | `VARCHAR(150)` | `NULL` | Contact email address |
+| `department` | `VARCHAR(150)` | `NULL` | Academic department of graduation |
+| `graduation_year`| `INT` | `NULL` | Four-digit calendar year of graduation |
+| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | System registration timestamp |
 
-### 3.3. Announcements Entity (`announcements` table - Homework)
-Stores campus updates, career opportunities, and alumni networking announcements.
+### 3.3. Announcements Entity (`announcements` table)
+Maintains institutional bulletins, career notices, and alumni networking announcements.
 
-| Field Name | Data Type | Constraints | Description |
+| Column Name | Data Type | Key / Constraint | Description |
 |---|---|---|---|
-| `id` | `INT` | `PRIMARY KEY`, `AUTO_INCREMENT` | Unique identifier for announcement |
-| `title` | `VARCHAR(200)` | `NOT NULL` | Header/title of the announcement |
-| `content` | `TEXT` | `NOT NULL` | Full announcement text / description |
-| `category` | `VARCHAR(50)` | `NOT NULL` | Category: `General`, `Event`, `Career`, `Mentorship` |
-| `author` | `VARCHAR(100)` | `NOT NULL` | Issuing office or individual name |
+| `id` | `INT` | `PK`, `AUTO_INCREMENT` | Unique identifier for announcement |
+| `title` | `VARCHAR(200)` | `NOT NULL` | Headline / subject of announcement |
+| `content` | `TEXT` | `NOT NULL` | Full body text of the bulletin |
+| `category` | `VARCHAR(50)` | `NOT NULL` | Categorization: `General`, `Event`, `Career`, `Mentorship` |
+| `author` | `VARCHAR(100)` | `NOT NULL` | Publishing entity, office, or individual |
 | `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | Publication timestamp |
 
 ---
@@ -114,35 +110,38 @@ erDiagram
         timestamp created_at
     }
 
-    USERS ||--o{ ANNOUNCEMENTS : "authors / publishes"
-    USERS ||--o| ALUMNI : "corresponds to (optional profile)"
+    USERS ||--o{ ANNOUNCEMENTS : "publishes / manages"
+    USERS ||--o| ALUMNI : "associates with graduate profile"
 ```
 
 ---
 
-## 🔄 5. Data Flow & CRUD Mapping
+## 🛡️ 5. Data Integrity & Constraint Rules
 
-| Operation | HTTP Verb | Route | Target Entity | Data Action |
-|---|---|---|---|---|
-| **Create** | `POST` | `/users` or `/api/users` | `User` | Inserts new user record |
-| **Read (All)** | `GET` | `/users` or `/api/users` | `User` | Queries full collection |
-| **Read (One)** | `GET` | `/api/users/:id` | `User` | Queries single record by PK |
-| **Update (Full)**| `PUT` | `/api/users/:id` | `User` | Overwrites all record attributes |
-| **Update (Partial)**| `PATCH` | `/api/users/:id` | `User` | Mutates only specified fields |
-| **Delete** | `DELETE`/`POST` | `/users/:id/delete` | `User` | Removes record by PK |
-| **Create** | `POST` | `/announcements` | `Announcement`| Inserts new announcement |
-| **Read** | `GET` | `/announcements` | `Announcement`| Lists announcements |
-| **Update** | `POST`/`PUT` | `/announcements/:id/update` | `Announcement`| Updates announcement |
-| **Delete** | `POST`/`DELETE`| `/announcements/:id/delete` | `Announcement`| Deletes announcement |
+1. **Entity Integrity:**
+   - Every table mandates an auto-incrementing surrogate primary key (`id`) guaranteeing unique tuple access.
+2. **Domain Integrity:**
+   - `users.email` and `alumni.email` adhere to standard RFC-compliant electronic mail format.
+   - `alumni.graduation_year` accepts valid numeric integer values representing calendar years.
+   - `announcements.category` is constrained to defined domain values (`General`, `Event`, `Career`, `Mentorship`).
+3. **Uniqueness Constraints:**
+   - Both `username` and `email` columns in `users` carry unique index constraints to prevent duplicate credentials.
+4. **Mandatory Field Constraints:**
+   - Critical descriptive attributes (`username`, `email`, `password`, `first_name`, `last_name`, `title`, `content`) enforce `NOT NULL` constraints.
 
 ---
 
-## 🛡️ 6. Data Integrity & Validation Rules
+## 🔄 6. Data Access Patterns (CRUD Operations)
 
-1. **Uniqueness:**
-   - `users.username` and `users.email` are enforced as unique to prevent duplicate identities.
-2. **Nullability:**
-   - Core identifiers and security credentials (`username`, `email`, `password`, `title`, `content`) cannot be `NULL`.
-3. **Storage Boundary:**
-   - Passwords must be hashed prior to persistent storage.
-   - Categorical fields in announcements are validated against predefined enums (`General`, `Event`, `Career`, `Mentorship`).
+| Operation | Entity | Endpoint / Interface | Storage Action |
+|---|---|---|---|
+| **Create** | User | `POST /users`, `POST /api/users` | `INSERT INTO users (...)` |
+| **Read (All)** | User | `GET /users`, `GET /api/users` | `SELECT * FROM users ORDER BY id` |
+| **Read (One)** | User | `GET /api/users/:id` | `SELECT * FROM users WHERE id = ?` |
+| **Update (Full)** | User | `PUT /api/users/:id` | `UPDATE users SET ... WHERE id = ?` |
+| **Update (Partial)** | User | `PATCH /api/users/:id` | `UPDATE users SET [field] = ? WHERE id = ?` |
+| **Delete** | User | `POST /users/:id/delete`, `DELETE /api/users/:id` | `DELETE FROM users WHERE id = ?` |
+| **Create** | Announcement | `POST /announcements`, `POST /api/announcements` | `INSERT INTO announcements (...)` |
+| **Read (All)** | Announcement | `GET /announcements`, `GET /api/announcements` | `SELECT * FROM announcements ORDER BY created_at DESC` |
+| **Update** | Announcement | `POST /announcements/:id/update`, `PUT /api/announcements/:id` | `UPDATE announcements SET ... WHERE id = ?` |
+| **Delete** | Announcement | `POST /announcements/:id/delete`, `DELETE /api/announcements/:id` | `DELETE FROM announcements WHERE id = ?` |
