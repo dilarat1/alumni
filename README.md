@@ -78,6 +78,23 @@ docker compose up --build
 
 The application will be available at: **`http://localhost:3000`**
 
+### 🔄 Database Migrations
+
+Run database migrations at any time to keep the schema up to date:
+
+```bash
+# Inside docker container:
+docker compose exec app npm run migrate
+
+# Or directly locally:
+npm run migrate
+```
+
+Migration files located in `migrations/`:
+- `001_create_alumni_table.sql`
+- `002_create_users_table.sql`
+- `003_create_announcements_table.sql`
+
 ---
 
 ## 🌐 Endpoints & Pages
