@@ -50,14 +50,14 @@ alumni/
 ### Detailed Layer Descriptions
 
 #### 1. Model Layer (`src/models/`)
-- **`User.js`**: Implements complete in-memory CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) without database dependency.
-- **`Announcement.js`** *(Homework)*: Implements complete in-memory CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) for campus & alumni announcements.
+- **`User.js`**: Connected directly to MySQL via connection pool. Implements complete asynchronous CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`).
+- **`Announcement.js`** *(Homework)*: Connected directly to MySQL via connection pool. Implements complete asynchronous CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) for campus & alumni bulletins.
 
 #### 2. Controller Layer (`src/controllers/`)
-- **`UserController.js`**: Handles user web views; fetches data from `UserModel` and renders `views/users/index.ejs`.
-- **`ApiUserController.js`**: Handles JSON API endpoints for user management; interacts with `UserModel` and returns standard HTTP responses (`200 OK`, `201 Created`, `404 Not Found`).
-- **`AnnouncementController.js`** *(Homework)*: Handles announcement web views and form submissions, rendering `views/announcements/index.ejs`.
-- **`ApiAnnouncementController.js`** *(Homework)*: Handles JSON API CRUD operations on announcements.
+- **`UserController.js`**: Asynchronously handles user web views; queries `UserModel` (MySQL) and renders `views/users/index.ejs`.
+- **`ApiUserController.js`**: Asynchronously handles JSON API endpoints for user management; queries `UserModel` (MySQL) and returns standard HTTP responses (`200 OK`, `201 Created`, `404 Not Found`).
+- **`AnnouncementController.js`** *(Homework)*: Asynchronously handles announcement web views and form submissions, rendering `views/announcements/index.ejs` from MySQL.
+- **`ApiAnnouncementController.js`** *(Homework)*: Asynchronously handles JSON API CRUD operations on announcements backed by MySQL.
 
 #### 3. View Layer (`src/views/`)
 - **`users/index.ejs`**: Server-side rendered interface displaying users in a table, an "Add User" form (Create), an edit modal (Update), and delete action (Delete).

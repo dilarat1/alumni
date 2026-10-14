@@ -1,108 +1,70 @@
+const pool = require('../db');
+
 /**
  * User Model
- * In-memory storage without database connection (as requested by instructor).
- * Implements full CRUD operations.
+ * Connected to MySQL Database (via db connection pool).
+ * Implements full asynchronous CRUD operations.
  */
 class UserModel {
-  constructor() {
-    this.users = [
-      {
-        id: 1,
-        username: 'admin',
-        email: 'admin@alumni.com',
-        password: 'password123',
-        phone: '555-0001',
-        created_at: new Date('2026-09-30T06:41:38.000Z')
-      },
-      {
-        id: 2,
-        username: 'dilara',
-        email: 'dilara@alumni.com',
-        password: 'password123',
-        phone: '555-0002',
-        created_at: new Date('2026-09-30T06:41:38.000Z')
-      },
-      {
-        id: 3,
-        username: 'emre',
-        email: 'emre@alumni.com',
-        password: 'password123',
-        phone: '555-0003',
-        created_at: new Date('2026-09-30T06:54:46.000Z')
-      }
-    ];
-    this.nextId = 4;
-  }
-
   // READ (All)
-  getAll() {
-    return this.users.map(({ password, ...u }) => u);
+  async getAll() {
+    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users ORDER BY id');
+    return rows;
   }
 
   // READ (One by ID)
-  getById(id) {
-    const user = this.users.find(u => u.id === parseInt(id));
-    if (!user) return null;
-    const { password, ...safeUser } = user;
-    return safeUser;
+  async getById(id) {
+    const [rows] = await pool.query('SELECT id, username, email, phone, created_at FROM users WHERE id = ?', [id]);
+    return rows.length > 0 ? rows[0] : null;
   }
 
   // CREATE
-  create(userData) {
+  async create(userData) {
     const { username, email, password, phone } = userData;
-    const newUser = {
-      id: this.nextId++,
-      username: username || 'user_' + this.nextId,
-      email: email || '',
-      password: password || '123456',
-      phone: phone || '',
-      created_at: new Date()
-    };
-    this.users.push(newUser);
-    const { password: _, ...safeUser } = newUser;
-    return safeUser;
+    const [result] = await pool.query(
+      'INSERT INTO users (username, email, password, phone) VALUES (?, ?, ?, ?)',
+      [username, email, password || 'password123', phone || null]
+    );
+    return this.getById(result.insertId);
   }
 
   // UPDATE (Full - PUT)
-  update(id, userData) {
-    const index = this.users.findIndex(u => u.id === parseInt(id));
-    if (index === -1) return null;
-
+  async update(id, userData) {
     const { username, email, password, phone } = userData;
-    this.users[index] = {
-      ...this.users[index],
-      username: username || this.users[index].username,
-      email: email || this.users[index].email,
-      password: password || this.users[index].password,
-      phone: phone !== undefined ? phone : this.users[index].phone
-    };
-
-    const { password: _, ...safeUser } = this.users[index];
-    return safeUser;
+    const [result] = await pool.query(
+      'UPDATE users SET username = ?, email = ?, password = ?, phone = ? WHERE id = ?',
+      [username, email, password || 'password123', phone || null, id]
+    );
+    if (result.affectedRows === 0) return null;
+    return this.getById(id);
   }
 
   // PATCH (Partial update)
-  patch(id, partialData) {
-    const index = this.users.findIndex(u => u.id === parseInt(id));
-    if (index === -1) return null;
-
+  async patch(id, partialData) {
     const allowed = ['username', 'email', 'password', 'phone'];
-    allowed.forEach(field => {
-      if (partialData[field] !== undefined) {
-        this.users[index][field] = partialData[field];
-      }
-    });
+    const updates = [];
+    const values = [];
 
-    const { password: _, ...safeUser } = this.users[index];
-    return safeUser;
+    for (const field of allowed) {
+      if (partialData[field] !== undefined) {
+        updates.push(`${field} = ?`);
+        values.push(partialData[field]);
+      }
+    }
+
+    if (updates.length === 0) return this.getById(id);
+
+    values.push(id);
+    const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+    const [result] = await pool.query(sql, values);
+    if (result.affectedRows === 0) return null;
+    return this.getById(id);
   }
 
   // DELETE
-  delete(id) {
-    const index = this.users.findIndex(u => u.id === parseInt(id));
-    if (index === -1) return false;
-    this.users.splice(index, 1);
-    return true;
+  async delete(id) {
+    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 }
 

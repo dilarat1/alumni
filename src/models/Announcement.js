@@ -1,101 +1,70 @@
+const pool = require('../db');
+
 /**
  * Announcement Model (Homework)
- * In-memory storage without database connection.
- * Implements full CRUD operations.
+ * Connected to MySQL Database (via db connection pool).
+ * Implements full asynchronous CRUD operations.
  */
 class AnnouncementModel {
-  constructor() {
-    this.announcements = [
-      {
-        id: 1,
-        title: 'Alumni Homecoming Day 2026',
-        content: 'Join us on campus for our annual alumni reunion event with networking sessions and workshops.',
-        category: 'Event',
-        author: 'Rectorate',
-        created_at: new Date('2026-10-01T10:00:00.000Z')
-      },
-      {
-        id: 2,
-        title: 'Tech Career Fair Registrations Open',
-        content: 'Top tech companies are recruiting our graduates. Register before October 15th.',
-        category: 'Career',
-        author: 'Career Center',
-        created_at: new Date('2026-10-03T12:30:00.000Z')
-      },
-      {
-        id: 3,
-        title: 'Mentorship Program Kickoff',
-        content: 'Connect with experienced alumni mentors in your industry. Applications are now live.',
-        category: 'Mentorship',
-        author: 'Alumni Association',
-        created_at: new Date('2026-10-05T09:15:00.000Z')
-      }
-    ];
-    this.nextId = 4;
-  }
-
   // READ (All)
-  getAll() {
-    return [...this.announcements];
+  async getAll() {
+    const [rows] = await pool.query('SELECT * FROM announcements ORDER BY created_at DESC');
+    return rows;
   }
 
   // READ (One by ID)
-  getById(id) {
-    const item = this.announcements.find(a => a.id === parseInt(id));
-    return item ? { ...item } : null;
+  async getById(id) {
+    const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [id]);
+    return rows.length > 0 ? rows[0] : null;
   }
 
   // CREATE
-  create(data) {
+  async create(data) {
     const { title, content, category, author } = data;
-    const newItem = {
-      id: this.nextId++,
-      title: title || 'Untitled Announcement',
-      content: content || '',
-      category: category || 'General',
-      author: author || 'Admin',
-      created_at: new Date()
-    };
-    this.announcements.unshift(newItem);
-    return newItem;
+    const [result] = await pool.query(
+      'INSERT INTO announcements (title, content, category, author) VALUES (?, ?, ?, ?)',
+      [title, content, category || 'General', author || 'Admin']
+    );
+    return this.getById(result.insertId);
   }
 
   // UPDATE (Full - PUT)
-  update(id, data) {
-    const index = this.announcements.findIndex(a => a.id === parseInt(id));
-    if (index === -1) return null;
-
+  async update(id, data) {
     const { title, content, category, author } = data;
-    this.announcements[index] = {
-      ...this.announcements[index],
-      title: title || this.announcements[index].title,
-      content: content || this.announcements[index].content,
-      category: category || this.announcements[index].category,
-      author: author || this.announcements[index].author
-    };
-    return { ...this.announcements[index] };
+    const [result] = await pool.query(
+      'UPDATE announcements SET title = ?, content = ?, category = ?, author = ? WHERE id = ?',
+      [title, content, category || 'General', author || 'Admin', id]
+    );
+    if (result.affectedRows === 0) return null;
+    return this.getById(id);
   }
 
   // PATCH (Partial)
-  patch(id, partialData) {
-    const index = this.announcements.findIndex(a => a.id === parseInt(id));
-    if (index === -1) return null;
-
+  async patch(id, partialData) {
     const allowed = ['title', 'content', 'category', 'author'];
-    allowed.forEach(field => {
+    const updates = [];
+    const values = [];
+
+    for (const field of allowed) {
       if (partialData[field] !== undefined) {
-        this.announcements[index][field] = partialData[field];
+        updates.push(`${field} = ?`);
+        values.push(partialData[field]);
       }
-    });
-    return { ...this.announcements[index] };
+    }
+
+    if (updates.length === 0) return this.getById(id);
+
+    values.push(id);
+    const sql = `UPDATE announcements SET ${updates.join(', ')} WHERE id = ?`;
+    const [result] = await pool.query(sql, values);
+    if (result.affectedRows === 0) return null;
+    return this.getById(id);
   }
 
   // DELETE
-  delete(id) {
-    const index = this.announcements.findIndex(a => a.id === parseInt(id));
-    if (index === -1) return false;
-    this.announcements.splice(index, 1);
-    return true;
+  async delete(id) {
+    const [result] = await pool.query('DELETE FROM announcements WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 }
 
