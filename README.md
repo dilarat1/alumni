@@ -2,6 +2,9 @@
 
 A web application for university alumni, users, and announcements tracking built with **Express.js**, **EJS**, **MySQL**, and **Docker**.
 
+> 📄 **Data Design Documentation:** See the full [Data Design Documentation (DDD.md)](./DDD.md) for detailed schema specifications, ERD, and data dictionary.
+> 🔑 **Environment Configuration:** See [.example.env](./.example.env) for required environment variables.
+
 ---
 
 ## 🏛️ MVC Architecture Documentation

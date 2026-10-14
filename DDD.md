@@ -4,6 +4,9 @@
 
 This document specifies the **Data Design Documentation (DDD)** for the **Alumni Management System**. It outlines the conceptual, logical, and physical data architecture, relational schemas, entity relationships, integrity constraints, and persistence strategies.
 
+> 📖 **Project README:** See the main [Project README (README.md)](./README.md) for application setup, MVC architecture, and complete endpoint listings.
+> 🔑 **Environment Configuration:** See [.example.env](./.example.env) for environment variable references.
+
 ---
 
 ## 🏗️ 2. Storage & Persistence Architecture
