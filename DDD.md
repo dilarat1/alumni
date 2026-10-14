@@ -148,3 +148,33 @@ erDiagram
 | **Read (All)** | Announcement | `GET /announcements`, `GET /api/announcements` | `SELECT * FROM announcements ORDER BY created_at DESC` |
 | **Update** | Announcement | `POST /announcements/:id/update`, `PUT /api/announcements/:id` | `UPDATE announcements SET ... WHERE id = ?` |
 | **Delete** | Announcement | `POST /announcements/:id/delete`, `DELETE /api/announcements/:id` | `DELETE FROM announcements WHERE id = ?` |
+
+---
+
+## 🔀 7. Schema Versioning & Migration Strategy
+
+To evolve the database schema safely across development and deployment environments without data loss, the system uses an incremental, versioned migration pipeline.
+
+### 7.1. Migration Registry
+Migrations are tracked in the database via the `migrations` metadata table:
+
+```sql
+CREATE TABLE IF NOT EXISTS migrations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 7.2. Migration Pipeline Files
+All SQL schema definition and seed scripts reside in the `/migrations` folder:
+- **`001_create_alumni_table.sql`**: Provisions the `alumni` entity and seed records.
+- **`002_create_users_table.sql`**: Provisions the `users` authentication entity and administrative seeds.
+- **`003_create_announcements_table.sql`**: Provisions the `announcements` entity and institutional announcements.
+
+### 7.3. Execution Command
+```bash
+docker compose exec app npm run migrate
+```
+The migration runner checks the registry and applies only unexecuted scripts in numerical sequence.
+
