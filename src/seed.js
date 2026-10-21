@@ -2,6 +2,8 @@ const pool = require('./db');
 const UserFactory = require('./factories/UserFactory');
 const AlumniFactory = require('./factories/AlumniFactory');
 const AnnouncementFactory = require('./factories/AnnouncementFactory');
+const JobPostingFactory = require('./factories/JobPostingFactory');
+const ApplicationFactory = require('./factories/ApplicationFactory');
 
 async function seedDatabase() {
   console.log('🌱 [Seeder] Starting database seeding with Factory classes...\n');
@@ -39,6 +41,32 @@ async function seedDatabase() {
       );
     }
     console.log('✅ [Announcements] Seeded into MySQL announcements table.\n');
+
+    // 4. Seed Job Postings (Item 6)
+    const jobPostings = JobPostingFactory.createMany(6);
+    console.log(`🏭 [JobPostingFactory] Generated ${jobPostings.length} mock job postings.`);
+    const createdJobIds = [];
+    for (const jp of jobPostings) {
+      const [res] = await pool.query(
+        'INSERT INTO job_postings (title, company, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [jp.title, jp.company, jp.location, jp.type, jp.description, jp.requirements, jp.salary, jp.contact_email]
+      );
+      createdJobIds.push(res.insertId);
+    }
+    console.log(`✅ [JobPostings] Seeded ${createdJobIds.length} records into MySQL job_postings table.\n`);
+
+    // 5. Seed Applications for Created Job Postings
+    console.log(`🏭 [ApplicationFactory] Seeding applications linked to job vacancies...`);
+    for (const jobId of createdJobIds) {
+      const apps = ApplicationFactory.createMany(2, jobId);
+      for (const app of apps) {
+        await pool.query(
+          'INSERT INTO applications (job_posting_id, applicant_name, applicant_email, resume_url, cover_letter, status) VALUES (?, ?, ?, ?, ?, ?)',
+          [app.job_posting_id, app.applicant_name, app.applicant_email, app.resume_url, app.cover_letter, app.status]
+        );
+      }
+    }
+    console.log('✅ [Applications] Seeded into MySQL applications table.\n');
 
     console.log('🎉 [Seeder] Database seeding completed successfully!');
   } catch (err) {

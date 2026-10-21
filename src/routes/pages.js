@@ -11,7 +11,9 @@ router.get('/', (req, res) => {
         <p>Welcome to the Alumni tracking system.</p>
         <nav>
           <a href="/users">Users (MVC View)</a> |
-          <a href="/announcements">Announcements (Homework)</a> |
+          <a href="/announcements">Announcements</a> |
+          <a href="/job-postings">Job Postings (Career)</a> |
+          <a href="/applications">Applications (Dashboard)</a> |
           <a href="/api/swagger">Swagger Docs</a> |
           <a href="/about">About</a> |
           <a href="/api/health">API Health</a>

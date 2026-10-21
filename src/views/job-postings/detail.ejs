@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= job.title %> | Alumni Career Center</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      padding: 30px 20px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .nav-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .nav-bar a {
+      background: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #0369a1;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: all 0.2s;
+    }
+    .nav-bar a:hover { transform: translateY(-1px); }
+    .alert-success {
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .badge-type {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .job-title { font-size: 26px; margin-bottom: 8px; color: #0f172a; }
+    .meta-bar {
+      display: flex;
+      gap: 16px;
+      color: #475569;
+      font-size: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .section-title { font-size: 16px; font-weight: 700; color: #1e293b; margin: 18px 0 8px; }
+    .desc-text { color: #334155; line-height: 1.7; font-size: 15px; }
+    .req-box {
+      background: #f8fafc;
+      border-left: 4px solid #0284c7;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+    input, textarea {
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary { background: #0284c7; color: white; }
+    .btn-primary:hover { background: #0369a1; }
+    .table-container { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+    th { background: #f8fafc; color: #475569; font-weight: 600; }
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-Pending { background: #fef3c7; color: #92400e; }
+    .status-Reviewing { background: #e0e7ff; color: #3730a3; }
+    .status-Accepted { background: #dcfce7; color: #166534; }
+    .status-Rejected { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav-bar">
+      <a href="/job-postings">← Back to All Job Postings</a>
+      <a href="/applications">Applications Dashboard</a>
+      <a href="/api/job-postings/<%= job.id %>/applications" target="_blank">View Nested JSON API</a>
+    </div>
+
+    <% if (success) { %>
+      <div class="alert-success">✓ <%= success %></div>
+    <% } %>
+
+    <!-- Job Header Card -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+        <h1 class="job-title"><%= job.title %></h1>
+        <span class="badge-type"><%= job.type %></span>
+      </div>
+
+      <div class="meta-bar">
+        <span>🏢 <strong><%= job.company %></strong></span>
+        <span>📍 <%= job.location %></span>
+        <% if (job.salary) { %>
+          <span>💰 <%= job.salary %></span>
+        <% } %>
+        <% if (job.contact_email) { %>
+          <span>✉️ <%= job.contact_email %></span>
+        <% } %>
+        <span>📅 <%= new Date(job.created_at).toLocaleDateString() %></span>
+      </div>
+
+      <div class="section-title">Description</div>
+      <p class="desc-text"><%= job.description %></p>
+
+      <% if (job.requirements) { %>
+        <div class="section-title">Requirements & Qualifications</div>
+        <div class="req-box"><%= job.requirements %></div>
+      <% } %>
+    </div>
+
+    <!-- Candidate Application Form -->
+    <div class="card">
+      <h2>📝 Submit Application for this Position</h2>
+      <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">
+        This submits an application linked directly to this job opening via nested relation.
+      </p>
+
+      <form action="/job-postings/<%= job.id %>/apply" method="POST">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="applicant_name" placeholder="e.g. Dilara Toraman" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" name="applicant_email" placeholder="e.g. dilara@example.com" required>
+          </div>
+          <div class="form-group full">
+            <label>Portfolio / Resume Link</label>
+            <input type="url" name="resume_url" placeholder="https://linkedin.com/in/... or https://github.com/...">
+          </div>
+          <div class="form-group full">
+            <label>Cover Letter / Motivation</label>
+            <textarea name="cover_letter" rows="3" placeholder="Explain why you are an ideal fit for this role..."></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Application</button>
+      </form>
+    </div>
+
+    <!-- Received Applications for this Job -->
+    <div class="card">
+      <h2>📬 Candidate Applications for this Job (<%= job.applications ? job.applications.length : 0 %>)</h2>
+      
+      <% if (!job.applications || job.applications.length === 0) { %>
+        <p style="color: #64748b; margin-top: 10px;">No applications received yet for this position.</p>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Applicant</th>
+                <th>Email</th>
+                <th>Portfolio / Resume</th>
+                <th>Cover Note</th>
+                <th>Status</th>
+                <th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% job.applications.forEach(app => { %>
+                <tr>
+                  <td><strong><%= app.applicant_name %></strong></td>
+                  <td><%= app.applicant_email %></td>
+                  <td>
+                    <% if (app.resume_url) { %>
+                      <a href="<%= app.resume_url %>" target="_blank" style="color: #0284c7; text-decoration: none;">Link ↗</a>
+                    <% } else { %>
+                      <span style="color: #94a3b8;">-</span>
+                    <% } %>
+                  </td>
+                  <td style="max-width: 260px; font-size: 13px; color: #475569;">
+                    <%= app.cover_letter ? (app.cover_letter.length > 80 ? app.cover_letter.substring(0, 80) + '...' : app.cover_letter) : '-' %>
+                  </td>
+                  <td>
+                    <span class="status-badge status-<%= app.status %>"><%= app.status %></span>
+                  </td>
+                  <td style="font-size: 12px; color: #64748b;"><%= new Date(app.created_at).toLocaleDateString() %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

@@ -100,4 +100,12 @@ router.use('/users', apiUserRoutes);
 const apiAnnouncementRoutes = require('./apiAnnouncementRoutes');
 router.use('/announcements', apiAnnouncementRoutes);
 
+// Delegate /job-postings to ApiJobPostingController routes (Direct & Nested)
+const apiJobPostingRoutes = require('./apiJobPostingRoutes');
+router.use('/job-postings', apiJobPostingRoutes);
+
+// Delegate /applications to ApiApplicationController routes (Direct)
+const apiApplicationRoutes = require('./apiApplicationRoutes');
+router.use('/applications', apiApplicationRoutes);
+
 module.exports = router;

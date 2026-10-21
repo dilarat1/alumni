@@ -5,6 +5,8 @@ const path = require('path');
 const pageRoutes = require('./routes/pages');
 const userRoutes = require('./routes/userRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
+const jobPostingRoutes = require('./routes/jobPostingRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
 const apiRoutes = require('./routes/api');
 
 const app = express();
@@ -23,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', pageRoutes);
 app.use('/users', userRoutes);
 app.use('/announcements', announcementRoutes);
+app.use('/job-postings', jobPostingRoutes);
+app.use('/applications', applicationRoutes);
 
 // API Endpoints (JSON / Swagger Layer)
 app.use('/api', apiRoutes);

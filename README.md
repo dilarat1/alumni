@@ -51,20 +51,29 @@ alumni/
 
 #### 1. Model Layer (`src/models/`)
 - **`User.js`**: Connected directly to MySQL via connection pool. Implements complete asynchronous CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`).
-- **`Announcement.js`** *(Homework)*: Connected directly to MySQL via connection pool. Implements complete asynchronous CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) for campus & alumni bulletins.
+- **`Announcement.js`**: Connected directly to MySQL via connection pool. Implements complete asynchronous CRUD operations (`getAll`, `getById`, `create`, `update`, `patch`, `delete`) for campus & alumni bulletins.
+- **`JobPosting.js`**: Manages career vacancies, company details, salaries, and 1:N relations with `applications`.
+- **`Application.js`**: Manages candidate submissions, status tracking (`Pending`, `Reviewing`, `Accepted`, `Rejected`), and belongsTo relation with `job_postings`.
 
 #### 2. Controller Layer (`src/controllers/`)
 - **`UserController.js`**: Asynchronously handles user web views; queries `UserModel` (MySQL) and renders `views/users/index.ejs`.
 - **`ApiUserController.js`**: Asynchronously handles JSON API endpoints for user management; queries `UserModel` (MySQL) and returns standard HTTP responses (`200 OK`, `201 Created`, `404 Not Found`).
-- **`AnnouncementController.js`** *(Homework)*: Asynchronously handles announcement web views and form submissions, rendering `views/announcements/index.ejs` from MySQL.
-- **`ApiAnnouncementController.js`** *(Homework)*: Asynchronously handles JSON API CRUD operations on announcements backed by MySQL.
+- **`AnnouncementController.js`**: Asynchronously handles announcement web views and form submissions, rendering `views/announcements/index.ejs` from MySQL.
+- **`ApiAnnouncementController.js`**: Asynchronously handles JSON API CRUD operations on announcements backed by MySQL.
+- **`JobPostingController.js`**: Handles job postings web views, posting forms, and detail views with applicant submissions.
+- **`ApiJobPostingController.js`**: Handles direct JSON API CRUD operations for job postings and nested routes for candidate applications.
+- **`ApplicationController.js`**: Handles candidate applications dashboard and status transitions.
+- **`ApiApplicationController.js`**: Handles direct JSON API CRUD operations for candidate applications.
 
 #### 3. View Layer (`src/views/`)
-- **`users/index.ejs`**: Server-side rendered interface displaying users in a table, an "Add User" form (Create), an edit modal (Update), and delete action (Delete).
-- **`announcements/index.ejs`** *(Homework)*: Management interface displaying categorized announcements, a "Post Announcement" form (Create), an inline update modal (Update), and delete action (Delete).
+- **`users/index.ejs`**: Server-side rendered interface displaying users in a table, an "Add User" form, an edit modal, and delete action.
+- **`announcements/index.ejs`**: Management interface displaying categorized announcements, a "Post Announcement" form, and update/delete actions.
+- **`job-postings/index.ejs`**: Career opportunities interface displaying active job openings with company and salary badges, plus a "Post a Job" form.
+- **`job-postings/detail.ejs`**: Detailed job description, "Submit Application" form, and a table of candidate applications received for that specific job.
+- **`applications/index.ejs`**: Master candidate applications dashboard with job references, CV links, cover letters, and live status transition controls.
 
 #### 4. Route Layer (`src/routes/`)
-- Maps incoming HTTP requests to their corresponding controller methods. Each domain has separate view routes and API routes.
+- Maps incoming HTTP requests to their corresponding controller methods. Covers direct routes, nested routes (`/api/job-postings/:jobPostingId/applications`), and server-side view routes.
 
 ---
 
@@ -94,6 +103,8 @@ Migration files located in `migrations/`:
 - `001_create_alumni_table.sql`
 - `002_create_users_table.sql`
 - `003_create_announcements_table.sql`
+- `004_create_job_postings_table.sql`
+- `005_create_applications_table.sql`
 
 ### 🌱 Database Seeding & Factory Pattern
 
@@ -111,6 +122,8 @@ npm run seed
 - `UserFactory.js`: Generates random user accounts with usernames, emails, and phone numbers.
 - `AlumniFactory.js`: Generates alumni records with departments and graduation years.
 - `AnnouncementFactory.js`: Generates campus bulletins with categories and issuing offices.
+- `JobPostingFactory.js`: Generates realistic job vacancies with tech employers (Trendyol, Getir, Hepsiburada, Baykar, etc.).
+- `ApplicationFactory.js`: Generates candidate job applications with CV links, cover letters, and review statuses.
 
 ---
 
@@ -124,10 +137,18 @@ npm run seed
 | POST | `/users` | Create user from HTML form |
 | POST | `/users/:id/update` | Update user from HTML form |
 | POST | `/users/:id/delete` | Delete user from HTML form |
-| GET | `/announcements` | **Announcements Management Interface (Homework)** |
+| GET | `/announcements` | **Announcements Management Interface** |
 | POST | `/announcements` | Create announcement from HTML form |
 | POST | `/announcements/:id/update` | Update announcement from HTML form |
 | POST | `/announcements/:id/delete` | Delete announcement from HTML form |
+| GET | `/job-postings` | **Job Postings & Career Opportunities (List + Form)** |
+| GET | `/job-postings/:id` | **Job Detail View + Nested Application Form + Applicants** |
+| POST | `/job-postings` | Create job posting from HTML form |
+| POST | `/job-postings/:id/apply` | Submit application for this job posting |
+| POST | `/job-postings/:id/delete` | Delete job posting |
+| GET | `/applications` | **Candidate Applications Dashboard (Review Pipeline)** |
+| POST | `/applications/:id/status` | Update candidate application status |
+| POST | `/applications/:id/delete` | Delete candidate application |
 | GET | `/hello` | Hello, World! greeting |
 | GET | `/hello/:name` | Dynamic greeting (e.g. `/hello/emre`) |
 | GET | `/sum/:n1/:n2` | Sum calculator (e.g. `/sum/10/20` → 30) |
@@ -139,7 +160,27 @@ npm run seed
 | GET | `/api/swagger` | **Interactive Swagger UI (OpenAPI 3.0)** |
 | GET | `/api/swagger.json` | OpenAPI JSON schema |
 
-### 3. REST API Endpoints (JSON / Postman / Swagger)
+### 3. REST API Endpoints (Direct & Nested)
+
+#### Job Postings API (`/api/job-postings`)
+- `GET /api/job-postings` - List all job postings
+- `GET /api/job-postings/:id` - Get single job posting
+- `POST /api/job-postings` - Create new job posting
+- `PUT /api/job-postings/:id` - Full update job posting
+- `PATCH /api/job-postings/:id` - Partial update job posting
+- `DELETE /api/job-postings/:id` - Delete job posting
+
+#### Nested Applications API (`/api/job-postings/:jobPostingId/applications`)
+- `GET /api/job-postings/:jobPostingId/applications` - **Nested:** List all applications for a specific job posting
+- `POST /api/job-postings/:jobPostingId/applications` - **Nested:** Submit application directly for a job posting
+
+#### Direct Applications API (`/api/applications`)
+- `GET /api/applications` - List all applications (supports query `?job_posting_id=:id`)
+- `GET /api/applications/:id` - Get application by ID with parent job details
+- `POST /api/applications` - Submit application (direct)
+- `PUT /api/applications/:id` - Update application
+- `PATCH /api/applications/:id` - Partial update (e.g. status transition)
+- `DELETE /api/applications/:id` - Delete application
 
 #### Users API (`/api/users`)
 - `GET /api/users` - List all users
@@ -149,7 +190,7 @@ npm run seed
 - `PATCH /api/users/:id` - Partial update (only sent fields)
 - `DELETE /api/users/:id` - Delete user
 
-#### Announcements API (`/api/announcements` - Homework)
+#### Announcements API (`/api/announcements`)
 - `GET /api/announcements` - List all announcements
 - `GET /api/announcements/:id` - Get announcement by ID
 - `POST /api/announcements` - Create announcement

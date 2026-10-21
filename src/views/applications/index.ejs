@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applications Dashboard | Alumni Career Center</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      padding: 30px 20px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .badge-header {
+      display: inline-block;
+      background: #ede9fe;
+      color: #6d28d9;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .subtitle { color: #666; margin-bottom: 24px; line-height: 1.6; }
+    .nav-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .nav-bar a {
+      background: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #6d28d9;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: all 0.2s;
+    }
+    .nav-bar a.active {
+      background: #7c3aed;
+      color: white;
+    }
+    .nav-bar a:hover { transform: translateY(-1px); }
+    .alert-success {
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .table-container { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+    th { background: #f8fafc; color: #475569; font-weight: 600; font-size: 13px; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-Pending { background: #fef3c7; color: #92400e; }
+    .status-Reviewing { background: #e0e7ff; color: #3730a3; }
+    .status-Accepted { background: #dcfce7; color: #166534; }
+    .status-Rejected { background: #fee2e2; color: #991b1b; }
+    .action-forms { display: flex; gap: 6px; align-items: center; }
+    select.status-select {
+      font-size: 12px;
+      padding: 4px 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background: white;
+    }
+    button.btn-small {
+      padding: 4px 8px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-update { background: #7c3aed; color: white; }
+    .btn-update:hover { background: #6d28d9; }
+    .btn-del { background: #fee2e2; color: #991b1b; }
+    .btn-del:hover { background: #fecaca; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge-header">📋 Candidate Pipeline</span>
+    <h1>Candidate Applications Dashboard</h1>
+    <p class="subtitle">Review and manage candidate applications submitted for university alumni job postings.</p>
+
+    <div class="nav-bar">
+      <a href="/">← Home</a>
+      <a href="/users">Users (MVC)</a>
+      <a href="/announcements">Announcements</a>
+      <a href="/job-postings">Job Postings</a>
+      <a href="/applications" class="active">Applications Dashboard</a>
+      <a href="/api/swagger">Swagger Docs</a>
+    </div>
+
+    <% if (success) { %>
+      <div class="alert-success">✓ <%= success %></div>
+    <% } %>
+
+    <div class="card">
+      <h2>All Candidate Submissions (<%= applications.length %>)</h2>
+
+      <% if (applications.length === 0) { %>
+        <p style="color: #64748b; margin-top: 10px;">No applications submitted yet.</p>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Applicant</th>
+                <th>Target Job Opportunity</th>
+                <th>Portfolio / Resume</th>
+                <th>Cover Note</th>
+                <th>Status</th>
+                <th>Change Status</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% applications.forEach(app => { %>
+                <tr>
+                  <td>#<%= app.id %></td>
+                  <td>
+                    <strong><%= app.applicant_name %></strong><br>
+                    <span style="font-size: 12px; color: #64748b;"><%= app.applicant_email %></span>
+                  </td>
+                  <td>
+                    <a href="/job-postings/<%= app.job_posting_id %>" style="color: #0284c7; text-decoration: none; font-weight: 600;">
+                      <%= app.job_title %>
+                    </a><br>
+                    <span style="font-size: 12px; color: #64748b;">🏢 <%= app.job_company %> (<%= app.job_location %>)</span>
+                  </td>
+                  <td>
+                    <% if (app.resume_url) { %>
+                      <a href="<%= app.resume_url %>" target="_blank" style="color: #7c3aed; font-weight: 600; text-decoration: none;">View CV ↗</a>
+                    <% } else { %>
+                      <span style="color: #94a3b8;">-</span>
+                    <% } %>
+                  </td>
+                  <td style="max-width: 220px; font-size: 12px; color: #475569;">
+                    <%= app.cover_letter ? (app.cover_letter.length > 70 ? app.cover_letter.substring(0, 70) + '...' : app.cover_letter) : '-' %>
+                  </td>
+                  <td>
+                    <span class="status-badge status-<%= app.status %>"><%= app.status %></span>
+                  </td>
+                  <td>
+                    <form action="/applications/<%= app.id %>/status" method="POST" class="action-forms">
+                      <select name="status" class="status-select">
+                        <option value="Pending" <%= app.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                        <option value="Reviewing" <%= app.status === 'Reviewing' ? 'selected' : '' %>>Reviewing</option>
+                        <option value="Accepted" <%= app.status === 'Accepted' ? 'selected' : '' %>>Accepted</option>
+                        <option value="Rejected" <%= app.status === 'Rejected' ? 'selected' : '' %>>Rejected</option>
+                      </select>
+                      <button type="submit" class="btn-small btn-update">Save</button>
+                    </form>
+                  </td>
+                  <td>
+                    <form action="/applications/<%= app.id %>/delete" method="POST" onsubmit="return confirm('Delete this application?');">
+                      <button type="submit" class="btn-small btn-del">✕</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>
