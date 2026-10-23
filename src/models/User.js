@@ -18,6 +18,15 @@ class UserModel {
     return rows.length > 0 ? rows[0] : null;
   }
 
+  // RELATION: 1-to-Many (User hasMany JobPostings - /api/users/:id/jobs)
+  async getJobs(userId) {
+    const [rows] = await pool.query(
+      'SELECT * FROM job_postings WHERE user_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
+    return rows;
+  }
+
   // CREATE
   async create(userData) {
     const { username, email, password, phone } = userData;

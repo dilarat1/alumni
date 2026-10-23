@@ -52,7 +52,11 @@ class JobPostingFactory {
   /**
    * Generates a single mock job posting.
    */
-  static createOne(overrides = {}) {
+  static createOne(userId = null, overrides = {}) {
+    if (typeof userId === 'object' && userId !== null) {
+      overrides = userId;
+      userId = overrides.user_id || null;
+    }
     const pos = this.getRandomElement(this.positions);
     const comp = this.getRandomElement(this.companies);
     const location = this.getRandomElement(this.locations);
@@ -60,6 +64,7 @@ class JobPostingFactory {
     const salary = this.getRandomElement(this.salaries);
 
     return {
+      user_id: userId,
       title: pos.title,
       company: comp.name,
       location,
@@ -75,10 +80,14 @@ class JobPostingFactory {
   /**
    * Generates multiple mock job postings.
    */
-  static createMany(count = 5, overrides = {}) {
+  static createMany(count = 5, userId = null, overrides = {}) {
+    if (typeof userId === 'object' && userId !== null) {
+      overrides = userId;
+      userId = overrides.user_id || null;
+    }
     const postings = [];
     for (let i = 0; i < count; i++) {
-      postings.push(this.createOne(overrides));
+      postings.push(this.createOne(userId, overrides));
     }
     return postings;
   }

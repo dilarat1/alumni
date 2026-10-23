@@ -105,6 +105,7 @@ Migration files located in `migrations/`:
 - `003_create_announcements_table.sql`
 - `004_create_job_postings_table.sql`
 - `005_create_applications_table.sql`
+- `006_add_user_id_to_job_postings.sql`
 
 ### 🌱 Database Seeding & Factory Pattern
 
@@ -189,6 +190,8 @@ npm run seed
 - `PUT /api/users/:id` - Full update (all fields required)
 - `PATCH /api/users/:id` - Partial update (only sent fields)
 - `DELETE /api/users/:id` - Delete user
+- `GET /api/users/:id/jobs` - **Nested:** List all job postings authored by this user
+- `POST /api/users/:id/jobs` - **Nested:** Create a new job posting on behalf of this user
 
 #### Announcements API (`/api/announcements`)
 - `GET /api/announcements` - List all announcements

@@ -21,4 +21,15 @@ router.patch('/:id', ApiUserController.patch);
 // DELETE /api/users/:id → delete user
 router.delete('/:id', ApiUserController.delete);
 
+// NESTED ROUTES: User's Job Postings (Fourth task nested route)
+// GET /api/users/:id/jobs → get all jobs posted by specific user
+router.get('/:id/jobs', ApiUserController.getUserJobs);
+
+// POST /api/users/:id/jobs → create a new job posting for user
+router.post('/:id/jobs', ApiUserController.createUserJob);
+
+// Aliases for /job-postings
+router.get('/:id/job-postings', ApiUserController.getUserJobs);
+router.post('/:id/job-postings', ApiUserController.createUserJob);
+
 module.exports = router;

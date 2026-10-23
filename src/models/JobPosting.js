@@ -27,6 +27,26 @@ class JobPostingModel {
     return rows;
   }
 
+  // RELATION: Get all job postings for a specific user
+  async getByUserId(userId) {
+    const [rows] = await pool.query(
+      'SELECT * FROM job_postings WHERE user_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
+    return rows;
+  }
+
+  // RELATION: Get author user for a job posting
+  async getUser(jobPostingId) {
+    const [rows] = await pool.query(`
+      SELECT u.id, u.username, u.email, u.phone
+      FROM users u
+      JOIN job_postings j ON j.user_id = u.id
+      WHERE j.id = ?
+    `, [jobPostingId]);
+    return rows.length > 0 ? rows[0] : null;
+  }
+
   // RELATION: Get job posting along with its nested applications array
   async getWithApplications(id) {
     const job = await this.getById(id);
@@ -37,10 +57,11 @@ class JobPostingModel {
 
   // CREATE
   async create(data) {
-    const { title, company, location, type, description, requirements, salary, contact_email } = data;
+    const { user_id, title, company, location, type, description, requirements, salary, contact_email } = data;
     const [result] = await pool.query(
-      'INSERT INTO job_postings (title, company, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO job_postings (user_id, title, company, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
+        user_id || null,
         title,
         company,
         location,
@@ -56,10 +77,11 @@ class JobPostingModel {
 
   // UPDATE (Full - PUT)
   async update(id, data) {
-    const { title, company, location, type, description, requirements, salary, contact_email } = data;
+    const { user_id, title, company, location, type, description, requirements, salary, contact_email } = data;
     const [result] = await pool.query(
-      'UPDATE job_postings SET title = ?, company = ?, location = ?, type = ?, description = ?, requirements = ?, salary = ?, contact_email = ? WHERE id = ?',
+      'UPDATE job_postings SET user_id = ?, title = ?, company = ?, location = ?, type = ?, description = ?, requirements = ?, salary = ?, contact_email = ? WHERE id = ?',
       [
+        user_id || null,
         title,
         company,
         location,
@@ -77,7 +99,7 @@ class JobPostingModel {
 
   // PATCH (Partial update)
   async patch(id, partialData) {
-    const allowed = ['title', 'company', 'location', 'type', 'description', 'requirements', 'salary', 'contact_email'];
+    const allowed = ['user_id', 'title', 'company', 'location', 'type', 'description', 'requirements', 'salary', 'contact_email'];
     const updates = [];
     const values = [];
 

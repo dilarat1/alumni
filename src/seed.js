@@ -42,18 +42,26 @@ async function seedDatabase() {
     }
     console.log('✅ [Announcements] Seeded into MySQL announcements table.\n');
 
-    // 4. Seed Job Postings (Item 6)
+    // 4. Seed Job Postings (Linked to Users)
+    // Fetch available user ids
+    const [existingUsers] = await pool.query('SELECT id FROM users LIMIT 10');
+    const userIds = existingUsers.map(u => u.id);
+    const defaultUserId = userIds.length > 0 ? userIds[0] : null;
+
     const jobPostings = JobPostingFactory.createMany(6);
     console.log(`🏭 [JobPostingFactory] Generated ${jobPostings.length} mock job postings.`);
     const createdJobIds = [];
-    for (const jp of jobPostings) {
+    for (let i = 0; i < jobPostings.length; i++) {
+      const jp = jobPostings[i];
+      // Distribute jobs across existing users so /api/users/:id/jobs has data
+      const assignedUserId = userIds.length > 0 ? userIds[i % userIds.length] : defaultUserId;
       const [res] = await pool.query(
-        'INSERT INTO job_postings (title, company, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [jp.title, jp.company, jp.location, jp.type, jp.description, jp.requirements, jp.salary, jp.contact_email]
+        'INSERT INTO job_postings (user_id, title, company, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [assignedUserId, jp.title, jp.company, jp.location, jp.type, jp.description, jp.requirements, jp.salary, jp.contact_email]
       );
       createdJobIds.push(res.insertId);
     }
-    console.log(`✅ [JobPostings] Seeded ${createdJobIds.length} records into MySQL job_postings table.\n`);
+    console.log(`✅ [JobPostings] Seeded ${createdJobIds.length} records linked to users into MySQL job_postings table.\n`);
 
     // 5. Seed Applications for Created Job Postings
     console.log(`🏭 [ApplicationFactory] Seeding applications linked to job vacancies...`);

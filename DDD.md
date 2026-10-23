@@ -85,6 +85,7 @@ Maintains professional employment vacancies, corporate job openings, and interns
 | Column Name | Data Type | Key / Constraint | Description |
 |---|---|---|---|
 | `id` | `INT` | `PK`, `AUTO_INCREMENT` | Unique identifier for the job vacancy |
+| `user_id` | `INT` | `NULL`, `FK -> users(id)` | Author/publisher user identifier (supports `/api/users/:id/jobs`) |
 | `title` | `VARCHAR(200)` | `NOT NULL` | Position title (e.g. Senior Backend Engineer) |
 | `company` | `VARCHAR(150)` | `NOT NULL` | Hiring organization or employer name |
 | `location` | `VARCHAR(150)` | `NOT NULL` | Geographic location or work arrangement (e.g. Istanbul, Remote) |
@@ -145,6 +146,7 @@ erDiagram
 
     JOB_POSTINGS {
         int id PK
+        int user_id FK
         string title
         string company
         string location
@@ -169,6 +171,7 @@ erDiagram
 
     USERS ||--o{ ANNOUNCEMENTS : "publishes / manages"
     USERS ||--o| ALUMNI : "associates with graduate profile"
+    USERS ||--o{ JOB_POSTINGS : "posts / authors (/api/users/:id/jobs)"
     JOB_POSTINGS ||--o{ APPLICATIONS : "receives / manages"
 ```
 
@@ -179,6 +182,7 @@ erDiagram
 1. **Entity Integrity:**
    - Every table mandates an auto-incrementing surrogate primary key (`id`) guaranteeing unique tuple access.
 2. **Referential Integrity & Cascading:**
+   - `job_postings.user_id` enforces a foreign key constraint referencing `users.id` with `ON DELETE SET NULL`, preserving job history while establishing authorship.
    - `applications.job_posting_id` enforces a foreign key constraint referencing `job_postings.id` with `ON DELETE CASCADE`, ensuring no orphaned applications persist when a job posting is removed.
 3. **Domain Integrity:**
    - `users.email`, `alumni.email`, `job_postings.contact_email`, and `applications.applicant_email` adhere to standard RFC-compliant electronic mail format.
@@ -214,9 +218,9 @@ erDiagram
 
 | Operation | Entity | Direct Endpoint | Storage Action |
 |---|---|---|---|
-| **Create** | Job Posting | `POST /api/job-postings`, `POST /job-postings` | `INSERT INTO job_postings (...)` |
-| **Read (All)** | Job Posting | `GET /api/job-postings`, `GET /job-postings` | `SELECT * FROM job_postings ORDER BY created_at DESC` |
-| **Read (One)** | Job Posting | `GET /api/job-postings/:id`, `GET /job-postings/:id` | `SELECT * FROM job_postings WHERE id = ?` |
+| **Create** | Job Posting | `POST /api/job-postings`, `POST /api/jobs`, `POST /job-postings` | `INSERT INTO job_postings (...)` |
+| **Read (All)** | Job Posting | `GET /api/job-postings`, `GET /api/jobs`, `GET /job-postings` | `SELECT * FROM job_postings ORDER BY created_at DESC` |
+| **Read (One)** | Job Posting | `GET /api/job-postings/:id`, `GET /api/jobs/:id`, `GET /job-postings/:id` | `SELECT * FROM job_postings WHERE id = ?` |
 | **Update** | Job Posting | `PUT /api/job-postings/:id`, `POST /job-postings/:id/update` | `UPDATE job_postings SET ... WHERE id = ?` |
 | **Patch** | Job Posting | `PATCH /api/job-postings/:id` | `UPDATE job_postings SET [fields] WHERE id = ?` |
 | **Delete** | Job Posting | `DELETE /api/job-postings/:id`, `POST /job-postings/:id/delete` | `DELETE FROM job_postings WHERE id = ?` |
@@ -227,12 +231,14 @@ erDiagram
 | **Patch Status** | Application | `PATCH /api/applications/:id`, `POST /applications/:id/status` | `UPDATE applications SET status = ? WHERE id = ?` |
 | **Delete** | Application | `DELETE /api/applications/:id`, `POST /applications/:id/delete` | `DELETE FROM applications WHERE id = ?` |
 
-### 6.3. Nested Routes (Relational Hierarchy: Job Postings ──► Applications)
+### 6.3. Nested Routes (Relational Hierarchy: Users ──► Jobs & Job Postings ──► Applications)
 
-Nested routes express parent-child resource relationships naturally via Express sub-routers (`mergeParams: true`):
+Nested routes express parent-child resource relationships naturally via Express sub-routers:
 
 | Operation | Nested Endpoint | Purpose & Relationship |
 |---|---|---|
+| **Read User's Job Postings** | `GET /api/users/:id/jobs` | **Fourth Task Nested Route:** Retrieves all job opportunities authored by a specific user (`SELECT * FROM job_postings WHERE user_id = ?`). |
+| **Create Job Posting for User** | `POST /api/users/:id/jobs` | Submits and automatically assigns a new job vacancy under the target `:id` user account. |
 | **Read Applications for Job** | `GET /api/job-postings/:jobPostingId/applications` | Retrieves all candidate applications submitted specifically for the indicated job posting (`WHERE job_posting_id = ?`). |
 | **Submit Application for Job** | `POST /api/job-postings/:jobPostingId/applications` | Submits a new application directly attached to `:jobPostingId` without needing to specify the foreign key in request body. |
 | **Read Single Application in Job** | `GET /api/job-postings/:jobPostingId/applications/:id` | Validates and retrieves an application scoped within the specific job posting parent context. |
@@ -261,6 +267,7 @@ All SQL schema definition and seed scripts reside in the `/migrations` folder:
 - **`003_create_announcements_table.sql`**: Provisions the `announcements` entity and institutional announcements.
 - **`004_create_job_postings_table.sql`**: Provisions the `job_postings` entity and career opportunity seeds.
 - **`005_create_applications_table.sql`**: Provisions the `applications` entity with foreign key constraint to `job_postings` (`ON DELETE CASCADE`) and candidate submissions.
+- **`006_add_user_id_to_job_postings.sql`**: Adds `user_id` foreign key referencing `users(id)` (`ON DELETE SET NULL`) to enable user-specific nested job postings (`/api/users/:id/jobs`).
 
 ### 7.3. Execution Command
 ```bash

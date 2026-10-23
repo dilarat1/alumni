@@ -103,6 +103,7 @@ router.use('/announcements', apiAnnouncementRoutes);
 // Delegate /job-postings to ApiJobPostingController routes (Direct & Nested)
 const apiJobPostingRoutes = require('./apiJobPostingRoutes');
 router.use('/job-postings', apiJobPostingRoutes);
+router.use('/jobs', apiJobPostingRoutes); // Alias for /api/jobs
 
 // Delegate /applications to ApiApplicationController routes (Direct)
 const apiApplicationRoutes = require('./apiApplicationRoutes');
