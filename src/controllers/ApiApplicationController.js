@@ -7,7 +7,7 @@ const JobPostingModel = require('../models/JobPosting');
  */
 class ApiApplicationController {
   // GET /api/applications (Direct: optional query ?job_posting_id=...)
-  static async getAll(req, res) {
+  static async getAll(req, res, next) {
     try {
       const { job_posting_id } = req.query;
       let applications;
@@ -18,33 +18,46 @@ class ApiApplicationController {
       }
       res.json(applications);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 
   // GET /api/applications/:id
-  static async getById(req, res) {
+  static async getById(req, res, next) {
     try {
       const application = await ApplicationModel.getByIdWithJob(req.params.id);
-      if (!application) return res.status(404).json({ error: 'Application not found' });
+      if (!application) {
+        return res.status(404).json({
+          error: 'Application not found',
+          status: 404,
+          reason: `No application exists with ID ${req.params.id}`
+        });
+      }
       res.json(application);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 
   // POST /api/applications (Direct)
-  static async create(req, res) {
+  static async create(req, res, next) {
     try {
-      const { job_posting_id, applicant_name, applicant_email, resume_url, cover_letter, status } = req.body;
+      const { job_posting_id, applicant_name, applicant_email, resume_url, cover_letter, status } = req.body || {};
       if (!job_posting_id || !applicant_name || !applicant_email) {
-        return res.status(400).json({ error: 'job_posting_id, applicant_name, and applicant_email are required' });
+        return res.status(400).json({
+          error: 'Validation failed',
+          reason: 'job_posting_id, applicant_name, and applicant_email are required'
+        });
       }
 
       // Check if parent job posting exists
       const job = await JobPostingModel.getById(job_posting_id);
       if (!job) {
-        return res.status(404).json({ error: `Referenced job_posting_id (${job_posting_id}) does not exist` });
+        return res.status(404).json({
+          error: 'Job posting not found',
+          status: 404,
+          reason: `Referenced job_posting_id (${job_posting_id}) does not exist`
+        });
       }
 
       const created = await ApplicationModel.create({
@@ -57,16 +70,19 @@ class ApiApplicationController {
       });
       res.status(201).json(created);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 
   // PUT /api/applications/:id
-  static async update(req, res) {
+  static async update(req, res, next) {
     try {
-      const { job_posting_id, applicant_name, applicant_email, resume_url, cover_letter, status } = req.body;
+      const { job_posting_id, applicant_name, applicant_email, resume_url, cover_letter, status } = req.body || {};
       if (!job_posting_id || !applicant_name || !applicant_email) {
-        return res.status(400).json({ error: 'job_posting_id, applicant_name, and applicant_email are required' });
+        return res.status(400).json({
+          error: 'Validation failed',
+          reason: 'job_posting_id, applicant_name, and applicant_email are required'
+        });
       }
 
       const updated = await ApplicationModel.update(req.params.id, {
@@ -77,32 +93,50 @@ class ApiApplicationController {
         cover_letter,
         status: status || 'Pending'
       });
-      if (!updated) return res.status(404).json({ error: 'Application not found' });
+      if (!updated) {
+        return res.status(404).json({
+          error: 'Application not found',
+          status: 404,
+          reason: `Cannot update: no application exists with ID ${req.params.id}`
+        });
+      }
       res.json(updated);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 
   // PATCH /api/applications/:id (e.g. status transition)
-  static async patch(req, res) {
+  static async patch(req, res, next) {
     try {
       const updated = await ApplicationModel.patch(req.params.id, req.body);
-      if (!updated) return res.status(404).json({ error: 'Application not found' });
+      if (!updated) {
+        return res.status(404).json({
+          error: 'Application not found',
+          status: 404,
+          reason: `Cannot patch: no application exists with ID ${req.params.id}`
+        });
+      }
       res.json(updated);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 
   // DELETE /api/applications/:id
-  static async delete(req, res) {
+  static async delete(req, res, next) {
     try {
       const deleted = await ApplicationModel.delete(req.params.id);
-      if (!deleted) return res.status(404).json({ error: 'Application not found' });
+      if (!deleted) {
+        return res.status(404).json({
+          error: 'Application not found',
+          status: 404,
+          reason: `Cannot delete: no application exists with ID ${req.params.id}`
+        });
+      }
       res.json({ message: 'Application deleted' });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(err);
     }
   }
 }

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ApiUserController = require('../controllers/ApiUserController');
+const { validateUser, validateJobPosting } = require('../middlewares/validate');
 
 // REST API Routes (CRUD operations with JSON)
 // GET /api/users → list all users
@@ -10,10 +11,10 @@ router.get('/', ApiUserController.getAll);
 router.get('/:id', ApiUserController.getById);
 
 // POST /api/users → create new user
-router.post('/', ApiUserController.create);
+router.post('/', validateUser, ApiUserController.create);
 
 // PUT /api/users/:id → full update
-router.put('/:id', ApiUserController.update);
+router.put('/:id', validateUser, ApiUserController.update);
 
 // PATCH /api/users/:id → partial update
 router.patch('/:id', ApiUserController.patch);
@@ -26,10 +27,10 @@ router.delete('/:id', ApiUserController.delete);
 router.get('/:id/jobs', ApiUserController.getUserJobs);
 
 // POST /api/users/:id/jobs → create a new job posting for user
-router.post('/:id/jobs', ApiUserController.createUserJob);
+router.post('/:id/jobs', validateJobPosting, ApiUserController.createUserJob);
 
 // Aliases for /job-postings
 router.get('/:id/job-postings', ApiUserController.getUserJobs);
-router.post('/:id/job-postings', ApiUserController.createUserJob);
+router.post('/:id/job-postings', validateJobPosting, ApiUserController.createUserJob);
 
 module.exports = router;

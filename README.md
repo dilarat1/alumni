@@ -17,33 +17,62 @@ alumni/
 ├── Dockerfile                     # Node.js Alpine runtime image
 ├── package.json                   # Dependencies (express, ejs, swagger-ui-express, mysql2, cors)
 ├── init.sql                       # Database initial schema & seeds
+├── DDD.md                         # Data Design Documentation, ERD & Domain Validation Rules
+├── logs/
+│   └── error.logs                 # Persistent 4xx/5xx error log file
+├── migrations/                    # Versioned SQL migrations (001 through 007)
 ├── src/
-│   ├── index.js                   # Application entry point, view engine setup, middleware & routing
+│   ├── index.js                   # Application entry point, middleware pipeline & routing
 │   ├── db.js                      # MySQL connection pool
+│   ├── migrate.js                 # Database migration runner
+│   ├── seed.js                    # Database factory seeder
 │   ├── swagger.json               # OpenAPI 3.0 specification for API & Views
 │   │
-│   ├── models/                    # 📦 MODEL LAYER (Business Logic & Data Storage)
-│   │   ├── User.js                # User model (In-memory CRUD without database connection)
-│   │   └── Announcement.js        # Announcement model (In-memory CRUD without database connection - Homework)
+│   ├── middlewares/               # 🛡️ MIDDLEWARE LAYER (Logging, Validation & Guardians)
+│   │   ├── logger.js              # Terminal request logger (time method route restype duration)
+│   │   ├── validate.js            # Domain validation rules (JobPosting & User rules)
+│   │   ├── notFoundGuardian.js    # 404 Guardian (404 JSON with reason & /404 web redirect)
+│   │   ├── errorGuardian.js       # 5xx Guardian (Global error handler & duplicate/JSON handler)
+│   │   └── fileLogger.js          # Appends error records & stack traces to logs/error.logs
+│   │
+│   ├── models/                    # 📦 MODEL LAYER (Business Logic & MySQL Data Storage)
+│   │   ├── User.js                # User model + 1:N getJobs relation
+│   │   ├── Announcement.js        # Announcement model
+│   │   ├── JobPosting.js          # JobPosting model + 1:N getApplications relation
+│   │   └── Application.js         # Application model + N:1 JobPosting relation
 │   │
 │   ├── views/                     # 👁️ VIEW LAYER (User Interface Templates)
+│   │   ├── 404.ejs                # Generic 404 Not Found page (target of invalid web redirects)
 │   │   ├── users/
-│   │   │   └── index.ejs          # EJS template for Users listings, create form, edit & delete
-│   │   └── announcements/
-│   │       └── index.ejs          # EJS template for Announcements management interface (Homework)
+│   │   │   └── index.ejs          # EJS template for Users management
+│   │   ├── announcements/
+│   │   │   └── index.ejs          # EJS template for Announcements management
+│   │   ├── job-postings/
+│   │   │   ├── index.ejs          # EJS template for Job Postings list & creation
+│   │   │   └── detail.ejs         # EJS template for Job detail & nested application form
+│   │   └── applications/
+│   │       └── index.ejs          # EJS template for Applications review dashboard
 │   │
 │   ├── controllers/               # ⚙️ CONTROLLER LAYER (Request Handling & Coordination)
 │   │   ├── UserController.js              # Web view controller for /users
-│   │   ├── ApiUserController.js          # REST API controller for /api/users
-│   │   ├── AnnouncementController.js      # Web view controller for /announcements (Homework)
-│   │   └── ApiAnnouncementController.js  # REST API controller for /api/announcements (Homework)
+│   │   ├── ApiUserController.js          # REST API controller for /api/users & /api/users/:id/jobs
+│   │   ├── AnnouncementController.js      # Web view controller for /announcements
+│   │   ├── ApiAnnouncementController.js  # REST API controller for /api/announcements
+│   │   ├── JobPostingController.js        # Web view controller for /job-postings
+│   │   ├── ApiJobPostingController.js    # REST API controller for /api/job-postings
+│   │   ├── ApplicationController.js       # Web view controller for /applications
+│   │   └── ApiApplicationController.js   # REST API controller for /api/applications
 │   │
 │   └── routes/                    # 🛣️ ROUTE LAYER (URL mapping to Controllers)
-│       ├── userRoutes.js          # Web routes for /users (View layer)
-│       ├── apiUserRoutes.js      # REST API routes for /api/users (JSON)
-│       ├── announcementRoutes.js  # Web routes for /announcements (View layer - Homework)
-│       ├── apiAnnouncementRoutes.js # REST API routes for /api/announcements (JSON - Homework)
-│       ├── pages.js               # General web routes (/, /about, /hello, /sum)
+│       ├── userRoutes.js          # Web routes for /users
+│       ├── apiUserRoutes.js       # REST API routes for /api/users & nested /:id/jobs
+│       ├── announcementRoutes.js  # Web routes for /announcements
+│       ├── apiAnnouncementRoutes.js # REST API routes for /api/announcements
+│       ├── jobPostingRoutes.js    # Web routes for /job-postings
+│       ├── apiJobPostingRoutes.js # REST API routes for /api/job-postings & nested applications
+│       ├── applicationRoutes.js   # Web routes for /applications
+│       ├── apiApplicationRoutes.js# REST API routes for /api/applications
+│       ├── pages.js               # General web routes (/, /about, /hello, /sum, /404)
 │       └── api.js                 # API mounting & Swagger documentation router
 ```
 
@@ -73,7 +102,14 @@ alumni/
 - **`applications/index.ejs`**: Master candidate applications dashboard with job references, CV links, cover letters, and live status transition controls.
 
 #### 4. Route Layer (`src/routes/`)
-- Maps incoming HTTP requests to their corresponding controller methods. Covers direct routes, nested routes (`/api/job-postings/:jobPostingId/applications`), and server-side view routes.
+- Maps incoming HTTP requests to their corresponding controller methods. Covers direct routes, nested routes (`/api/users/:id/jobs`, `/api/job-postings/:jobPostingId/applications`), and server-side view routes.
+
+#### 5. Middleware & Guardian Layer (`src/middlewares/`)
+- **`logger.js`**: Terminal Logger Middleware writing every request in `time method route restype duration` format (`10:20:30 POST /api/users 201 18ms`).
+- **`validate.js`**: Request body validation middleware enforcing domain rules (`JobPosting`: `title` required & max 120 chars, `company` required, `city` and `description` optional; `User`: `username` required, valid `email` format).
+- **`notFoundGuardian.js`**: 404 Guardian Middleware returning structured `404` JSON responses with a `reason` for API routes and redirecting invalid browser requests to `/404`.
+- **`errorGuardian.js`**: 5xx Guardian Middleware catching runtime/database errors (`500`), duplicate key conflicts (`409`), and malformed JSON payloads (`400`).
+- **`fileLogger.js`**: Writes all `4xx` and `5xx` error entries and stack traces to `logs/error.logs`.
 
 ---
 
@@ -106,6 +142,7 @@ Migration files located in `migrations/`:
 - `004_create_job_postings_table.sql`
 - `005_create_applications_table.sql`
 - `006_add_user_id_to_job_postings.sql`
+- `007_update_job_postings_rules.sql`
 
 ### 🌱 Database Seeding & Factory Pattern
 
@@ -150,6 +187,7 @@ npm run seed
 | GET | `/applications` | **Candidate Applications Dashboard (Review Pipeline)** |
 | POST | `/applications/:id/status` | Update candidate application status |
 | POST | `/applications/:id/delete` | Delete candidate application |
+| GET | `/404` | **Generic 404 Not Found Page (Target of invalid browser route redirects)** |
 | GET | `/hello` | Hello, World! greeting |
 | GET | `/hello/:name` | Dynamic greeting (e.g. `/hello/emre`) |
 | GET | `/sum/:n1/:n2` | Sum calculator (e.g. `/sum/10/20` → 30) |
@@ -163,10 +201,10 @@ npm run seed
 
 ### 3. REST API Endpoints (Direct & Nested)
 
-#### Job Postings API (`/api/job-postings`)
+#### Job Postings API (`/api/job-postings` & `/api/jobs`)
 - `GET /api/job-postings` - List all job postings
 - `GET /api/job-postings/:id` - Get single job posting
-- `POST /api/job-postings` - Create new job posting
+- `POST /api/job-postings` - Create new job posting (`title` required & max 120 chars, `company` required, `city` & `description` optional)
 - `PUT /api/job-postings/:id` - Full update job posting
 - `PATCH /api/job-postings/:id` - Partial update job posting
 - `DELETE /api/job-postings/:id` - Delete job posting
@@ -204,3 +242,64 @@ npm run seed
 #### System & Alumni
 - `GET /api/health` - Server uptime & database health check
 - `GET /api/alumni` - Alumni listings
+- `GET /api/error-test` - Simulated 500 error route for testing the `5xx Guardian` middleware
+
+---
+
+## 🛡️ Validation Rules, Middlewares & Error Logging (`logs/error.logs`)
+
+### 1. Domain Validation Rules (`JobPosting` & `User`)
+- **JobPosting:**
+  - `title`: **Required**, maximum **120 characters**.
+  - `company`: **Required**.
+  - `city` (`location`) & `description`: **Optional**.
+- **User:**
+  - `username`: **Required**, unique.
+  - `email`: **Required**, valid email format, unique (`409 Conflict` returned on duplicate).
+
+### 2. Terminal Logger Middleware (`src/middlewares/logger.js`)
+Every HTTP request is logged to the terminal upon completion:
+```text
+time      method  route                         restype  duration
+18:02:30  POST    /api/users/1/jobs             400      39ms
+18:02:30  POST    /api/users/1/jobs             201      65ms
+18:02:30  GET     /api/does-not-exist           404      2ms
+18:02:30  GET     /api/error-test               500      2ms
+```
+
+### 3. 404 Guardian (`src/middlewares/notFoundGuardian.js`) & Generic `/404` Page
+- **API Requests (`/api/*`):** Returns HTTP `404` JSON with an explicit `reason` field:
+  ```json
+  {
+    "error": "Not Found",
+    "status": 404,
+    "reason": "The requested resource or route 'GET /api/does-not-exist' was not found on this server.",
+    "method": "GET",
+    "path": "/api/does-not-exist"
+  }
+  ```
+- **Web Browser Requests:** Redirects invalid URLs (e.g. `/invalid-page`) to `/404?from=...&reason=...`, rendering `src/views/404.ejs`.
+
+### 4. 5xx Guardian (`src/middlewares/errorGuardian.js`) & Error Log File (`logs/error.logs`)
+- Catches unhandled exceptions (`500`), MySQL duplicate entry errors (`409`), and malformed JSON payloads (`400`).
+- Automatically appends error details and stack traces to **`logs/error.logs`**.
+
+### 5. Testing Invalid Requests (Postman / curl)
+```bash
+# 1. Missing title (400 Bad Request)
+curl -X POST http://localhost:3000/api/users/1/jobs -H "Content-Type: application/json" -d '{}'
+
+# 2. Title > 120 characters (400 Bad Request)
+curl -X POST http://localhost:3000/api/job-postings -H "Content-Type: application/json" \
+  -d '{"title":"This title is intentionally made much longer than one hundred and twenty characters so that the validation rule rejects it immediately with 400","company":"Acme"}'
+
+# 3. Valid JobPosting with optional city & description omitted (201 Created)
+curl -X POST http://localhost:3000/api/users/1/jobs -H "Content-Type: application/json" \
+  -d '{"title":"Platform Engineer","company":"Insider"}'
+
+# 4. 404 Guardian with reason (404 Not Found)
+curl http://localhost:3000/api/does-not-exist
+
+# 5. 5xx Guardian test (500 Internal Server Error -> logged to logs/error.logs)
+curl http://localhost:3000/api/error-test
+```

@@ -7,34 +7,44 @@ const ApplicationModel = require('../models/Application');
  */
 class JobPostingController {
   // GET /job-postings (Listings + create form)
-  static async list(req, res) {
+  static async list(req, res, next) {
     try {
       const postings = await JobPostingModel.getAll();
       res.render('job-postings/index', { postings, success: req.query.success || null });
     } catch (err) {
-      res.status(500).send('Error loading job postings: ' + err.message);
+      next(err);
     }
   }
 
   // GET /job-postings/:id (Detail view + applications for this job)
-  static async detail(req, res) {
+  static async detail(req, res, next) {
     try {
       const job = await JobPostingModel.getWithApplications(req.params.id);
-      if (!job) return res.status(404).send('Job posting not found');
+      if (!job) {
+        return res.redirect(
+          `/404?from=${encodeURIComponent(req.originalUrl)}&reason=${encodeURIComponent(`No job posting exists with ID ${req.params.id}`)}`
+        );
+      }
       res.render('job-postings/detail', { job, success: req.query.success || null });
     } catch (err) {
-      res.status(500).send('Error loading job details: ' + err.message);
+      next(err);
     }
   }
 
   // POST /job-postings (Create job posting)
-  static async create(req, res) {
+  static async create(req, res, next) {
     try {
-      const { title, company, location, type, description, requirements, salary, contact_email } = req.body;
+      const { title, company, city, location, type, description, requirements, salary, contact_email } = req.body || {};
+      if (!title || !title.trim() || title.trim().length > 120 || !company || !company.trim()) {
+        return res.redirect(
+          `/404?from=/job-postings&reason=${encodeURIComponent('Invalid job posting: title (max 120 chars) and company are required')}`
+        );
+      }
       await JobPostingModel.create({
-        title,
-        company,
-        location,
+        title: title.trim(),
+        company: company.trim(),
+        city: city !== undefined ? city : location,
+        location: location !== undefined ? location : city,
         type,
         description,
         requirements,
@@ -43,14 +53,14 @@ class JobPostingController {
       });
       res.redirect('/job-postings?success=Job+posting+created+successfully');
     } catch (err) {
-      res.status(500).send('Error creating job posting: ' + err.message);
+      next(err);
     }
   }
 
   // POST /job-postings/:id/apply (Candidate applies to this job)
-  static async apply(req, res) {
+  static async apply(req, res, next) {
     try {
-      const { applicant_name, applicant_email, resume_url, cover_letter } = req.body;
+      const { applicant_name, applicant_email, resume_url, cover_letter } = req.body || {};
       await ApplicationModel.create({
         job_posting_id: parseInt(req.params.id),
         applicant_name,
@@ -61,17 +71,17 @@ class JobPostingController {
       });
       res.redirect(`/job-postings/${req.params.id}?success=Application+submitted+successfully`);
     } catch (err) {
-      res.status(500).send('Error submitting application: ' + err.message);
+      next(err);
     }
   }
 
   // POST /job-postings/:id/delete (Delete job posting)
-  static async delete(req, res) {
+  static async delete(req, res, next) {
     try {
       await JobPostingModel.delete(req.params.id);
       res.redirect('/job-postings?success=Job+posting+deleted');
     } catch (err) {
-      res.status(500).send('Error deleting job posting: ' + err.message);
+      next(err);
     }
   }
 }

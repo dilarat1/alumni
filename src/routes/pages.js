@@ -55,4 +55,11 @@ router.get('/about', (req, res) => {
   `);
 });
 
+// GET /404 → Generic 404 page (Step 7)
+router.get('/404', (req, res) => {
+  const from = req.query.from || null;
+  const reason = req.query.reason || 'The requested page or resource does not exist.';
+  res.status(404).render('404', { from, reason });
+});
+
 module.exports = router;

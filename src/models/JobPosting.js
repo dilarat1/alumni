@@ -57,16 +57,19 @@ class JobPostingModel {
 
   // CREATE
   async create(data) {
-    const { user_id, title, company, location, type, description, requirements, salary, contact_email } = data;
+    const { user_id, title, company, city, location, type, description, requirements, salary, contact_email } = data;
+    const resolvedCity = city !== undefined ? city : (location !== undefined ? location : null);
+    const resolvedLocation = location !== undefined ? location : (city !== undefined ? city : null);
     const [result] = await pool.query(
-      'INSERT INTO job_postings (user_id, title, company, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO job_postings (user_id, title, company, city, location, type, description, requirements, salary, contact_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         user_id || null,
         title,
         company,
-        location,
+        resolvedCity || null,
+        resolvedLocation || null,
         type || 'Full-time',
-        description,
+        description !== undefined && description !== '' ? description : null,
         requirements || null,
         salary || null,
         contact_email || null
@@ -77,16 +80,19 @@ class JobPostingModel {
 
   // UPDATE (Full - PUT)
   async update(id, data) {
-    const { user_id, title, company, location, type, description, requirements, salary, contact_email } = data;
+    const { user_id, title, company, city, location, type, description, requirements, salary, contact_email } = data;
+    const resolvedCity = city !== undefined ? city : (location !== undefined ? location : null);
+    const resolvedLocation = location !== undefined ? location : (city !== undefined ? city : null);
     const [result] = await pool.query(
-      'UPDATE job_postings SET user_id = ?, title = ?, company = ?, location = ?, type = ?, description = ?, requirements = ?, salary = ?, contact_email = ? WHERE id = ?',
+      'UPDATE job_postings SET user_id = ?, title = ?, company = ?, city = ?, location = ?, type = ?, description = ?, requirements = ?, salary = ?, contact_email = ? WHERE id = ?',
       [
         user_id || null,
         title,
         company,
-        location,
+        resolvedCity || null,
+        resolvedLocation || null,
         type || 'Full-time',
-        description,
+        description !== undefined && description !== '' ? description : null,
         requirements || null,
         salary || null,
         contact_email || null,
@@ -99,7 +105,7 @@ class JobPostingModel {
 
   // PATCH (Partial update)
   async patch(id, partialData) {
-    const allowed = ['user_id', 'title', 'company', 'location', 'type', 'description', 'requirements', 'salary', 'contact_email'];
+    const allowed = ['user_id', 'title', 'company', 'city', 'location', 'type', 'description', 'requirements', 'salary', 'contact_email'];
     const updates = [];
     const values = [];
 

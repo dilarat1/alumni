@@ -1,0 +1,8 @@
+[2026-11-11T18:02:30.647Z] 18:02:30 | POST /api/users/1/jobs | Status: 400 | Reason: title is required
+[2026-11-11T18:02:30.660Z] 18:02:30 | POST /api/job-postings | Status: 400 | Reason: title must be at most 120 characters
+[2026-11-11T18:02:30.680Z] 18:02:30 | POST /api/job-postings | Status: 400 | Reason: company is required
+[2026-11-11T18:02:30.774Z] 18:02:30 | POST /api/users | Status: 400 | Reason: bad email: a valid email address is required
+[2026-11-11T18:02:30.792Z] 18:02:30 | POST /api/users | Status: 409 | Reason: Duplicate resource already exists: Duplicate entry 'admin' for key 'users.username' | Stack: Error: Duplicate entry 'admin' for key 'users.username' -> at UserModel.create (/app/src/models/User.js:33:33)
+[2026-11-11T18:02:30.807Z] 18:02:30 | GET /api/does-not-exist | Status: 404 | Reason: The requested resource or route 'GET /api/does-not-exist' was not found on this server.
+[2026-11-11T18:02:30.824Z] 18:02:30 | HEAD /invalid-page-route | Status: 404 | Reason: The requested resource or route 'HEAD /invalid-page-route' was not found on this server.
+[2026-11-11T18:02:30.840Z] 18:02:30 | GET /api/error-test | Status: 500 | Reason: Simulated unexpected 500 server crash caught by 5xx Guardian | Stack: Error: Simulated unexpected 500 server crash caught by 5xx Guardian -> at /app/src/routes/api.js:127:15

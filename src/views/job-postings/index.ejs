@@ -184,16 +184,16 @@
       <form action="/job-postings" method="POST">
         <div class="form-grid">
           <div class="form-group">
-            <label>Job Title *</label>
-            <input type="text" name="title" placeholder="e.g. Senior Backend Engineer" required>
+            <label>Job Title * (max 120 chars)</label>
+            <input type="text" name="title" maxlength="120" placeholder="e.g. Senior Backend Engineer" required>
           </div>
           <div class="form-group">
             <label>Company / Organization *</label>
             <input type="text" name="company" placeholder="e.g. Trendyol Group" required>
           </div>
           <div class="form-group">
-            <label>Location *</label>
-            <input type="text" name="location" placeholder="e.g. Istanbul (Hybrid) or Remote" required>
+            <label>City / Location (Optional)</label>
+            <input type="text" name="location" placeholder="e.g. Istanbul (Hybrid) or Remote">
           </div>
           <div class="form-group">
             <label>Employment Type</label>
@@ -214,8 +214,8 @@
             <input type="email" name="contact_email" placeholder="e.g. careers@company.com">
           </div>
           <div class="form-group full">
-            <label>Job Description *</label>
-            <textarea name="description" rows="3" placeholder="Overview of the position, team, and day-to-day responsibilities..." required></textarea>
+            <label>Job Description (Optional)</label>
+            <textarea name="description" rows="3" placeholder="Overview of the position, team, and day-to-day responsibilities..."></textarea>
           </div>
           <div class="form-group full">
             <label>Key Requirements & Qualifications</label>

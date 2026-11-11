@@ -86,14 +86,15 @@ Maintains professional employment vacancies, corporate job openings, and interns
 |---|---|---|---|
 | `id` | `INT` | `PK`, `AUTO_INCREMENT` | Unique identifier for the job vacancy |
 | `user_id` | `INT` | `NULL`, `FK -> users(id)` | Author/publisher user identifier (supports `/api/users/:id/jobs`) |
-| `title` | `VARCHAR(200)` | `NOT NULL` | Position title (e.g. Senior Backend Engineer) |
-| `company` | `VARCHAR(150)` | `NOT NULL` | Hiring organization or employer name |
-| `location` | `VARCHAR(150)` | `NOT NULL` | Geographic location or work arrangement (e.g. Istanbul, Remote) |
+| `title` | `VARCHAR(120)` | `NOT NULL` (Required, max 120 chars) | Position title (e.g. Senior Backend Engineer) |
+| `company` | `VARCHAR(150)` | `NOT NULL` (Required) | Hiring organization or employer name |
+| `city` | `VARCHAR(150)` | `NULL` (Optional) | City / location of the job opening |
+| `location` | `VARCHAR(150)` | `NULL` (Optional) | Geographic location or work arrangement (e.g. Istanbul, Remote) |
 | `type` | `VARCHAR(50)` | `DEFAULT 'Full-time'` | Employment arrangement: `Full-time`, `Part-time`, `Internship`, `Remote` |
-| `description` | `TEXT` | `NOT NULL` | Comprehensive role responsibilities and summary |
-| `requirements` | `TEXT` | `NULL` | Desired qualifications, tech stack, and prerequisites |
-| `salary` | `VARCHAR(100)` | `NULL` | Compensation range or terms |
-| `contact_email` | `VARCHAR(150)` | `NULL` | Recruiter or inquiry contact address |
+| `description` | `TEXT` | `NULL` (Optional) | Comprehensive role responsibilities and summary |
+| `requirements` | `TEXT` | `NULL` (Optional) | Desired qualifications, tech stack, and prerequisites |
+| `salary` | `VARCHAR(100)` | `NULL` (Optional) | Compensation range or terms |
+| `contact_email` | `VARCHAR(150)` | `NULL` (Optional) | Recruiter or inquiry contact address |
 | `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | Job posting listing timestamp |
 
 ### 3.5. Applications Entity (`applications` table)
@@ -177,8 +178,19 @@ erDiagram
 
 ---
 
-## 🛡️ 5. Data Integrity & Constraint Rules
+## 🛡️ 5. Data Integrity, Validation & Domain Rules
 
+### 5.1. JobPosting Validation Rules
+- **`title`**: **Required** (`NOT NULL`), string, **maximum 120 characters** (`VARCHAR(120)`). Requests with an empty title return `400 Bad Request` (`reason: "title is required"`), and titles exceeding 120 characters return `400 Bad Request` (`reason: "title must be at most 120 characters"`).
+- **`company`**: **Required** (`NOT NULL`), non-empty string. Requests without `company` return `400 Bad Request` (`reason: "company is required"`).
+- **`city` (`location`) & `description`**: **Optional** (`NULL` allowed). Job postings can be created with only `title` and `company`.
+
+### 5.2. User Validation Rules
+- **`username`**: **Required** (`NOT NULL`, `UNIQUE`).
+- **`email`**: **Required** (`NOT NULL`, `UNIQUE`), must match valid email syntax (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`). Invalid emails return `400 Bad Request` (`reason: "bad email: a valid email address is required"`).
+- **Duplicate Credentials**: Attempting to insert a duplicate `username` or `email` triggers `ER_DUP_ENTRY`, caught by the `5xx Guardian` and returned as `409 Conflict` (`{ error: "exists", status: 409, reason: ... }`).
+
+### 5.3. Relational & Constraint Rules
 1. **Entity Integrity:**
    - Every table mandates an auto-incrementing surrogate primary key (`id`) guaranteeing unique tuple access.
 2. **Referential Integrity & Cascading:**
@@ -188,12 +200,12 @@ erDiagram
    - `users.email`, `alumni.email`, `job_postings.contact_email`, and `applications.applicant_email` adhere to standard RFC-compliant electronic mail format.
    - `alumni.graduation_year` accepts valid numeric integer values representing calendar years.
    - `announcements.category` is constrained to defined domain values (`General`, `Event`, `Career`, `Mentorship`).
-   - `job_postings.type` defaults to `Full-time` and accepts (`Full-time`, `Part-time`, `Internship`, `Remote`).
+   - `job_postings.type` defaults to `Full-time` and accepts (`Full-time`, `Part-time`, `Internship`, `Hybrid`, `Remote`).
    - `applications.status` defaults to `Pending` and transitions through (`Pending`, `Reviewing`, `Accepted`, `Rejected`).
 4. **Uniqueness Constraints:**
    - Both `username` and `email` columns in `users` carry unique index constraints to prevent duplicate credentials.
 5. **Mandatory Field Constraints:**
-   - Critical descriptive attributes (`username`, `email`, `password`, `first_name`, `last_name`, `title`, `company`, `location`, `applicant_name`, `applicant_email`) enforce `NOT NULL` constraints.
+   - Critical attributes (`username`, `email`, `password`, `first_name`, `last_name`, `title`, `company`, `applicant_name`, `applicant_email`) enforce `NOT NULL` constraints, whereas `job_postings.city`, `job_postings.location`, and `job_postings.description` are optional (`NULL`).
 
 ---
 
@@ -268,6 +280,7 @@ All SQL schema definition and seed scripts reside in the `/migrations` folder:
 - **`004_create_job_postings_table.sql`**: Provisions the `job_postings` entity and career opportunity seeds.
 - **`005_create_applications_table.sql`**: Provisions the `applications` entity with foreign key constraint to `job_postings` (`ON DELETE CASCADE`) and candidate submissions.
 - **`006_add_user_id_to_job_postings.sql`**: Adds `user_id` foreign key referencing `users(id)` (`ON DELETE SET NULL`) to enable user-specific nested job postings (`/api/users/:id/jobs`).
+- **`007_update_job_postings_rules.sql`**: Enforces `JobPosting` domain rules at the database schema level (`title VARCHAR(120) NOT NULL`, `company VARCHAR(150) NOT NULL`, and makes `city`, `location`, and `description` optional / `NULL`).
 
 ### 7.3. Execution Command
 ```bash
@@ -294,4 +307,34 @@ The seeder connects to MySQL, instantiates the factories, and inserts records id
 ```bash
 docker compose exec app npm run seed
 ```
+
+---
+
+## 🛡️ 9. Middleware Pipeline, Guardians & Error Logging (`logs/error.logs`)
+
+Requests flow through an ordered middleware pipeline before and after hitting controllers:
+
+```
+Request ──► [1. Logger Middleware] ──► [2. JSON Parser] ──► [3. Validation Middleware] ──► [4. Controller / DB]
+                                                                                                   │
+                                      ┌────────────────────────────────────────────────────────────┘
+                                      ▼
+                        [5. 404 Guardian / /404 Redirect] ──► [6. 5xx Guardian] ──► [logs/error.logs]
+```
+
+1. **Logger Middleware (`src/middlewares/logger.js`):**
+   - Writes every request to the terminal upon completion in the format:
+     ```
+     time      method  route                         restype  duration
+     10:20:30  POST    /api/users                    201      18ms
+     ```
+2. **Validation Middleware (`src/middlewares/validate.js`):**
+   - Validates `JobPosting` (`title` required & max 120 characters, `company` required, `city` and `description` optional) and `User` (`username` required, valid `email` format).
+3. **404 Guardian Middleware (`src/middlewares/notFoundGuardian.js`):**
+   - Returns structured `404` JSON responses with a clear `reason` for API endpoints.
+   - Redirects invalid browser/web requests to the generic `/404` page (`src/views/404.ejs`).
+4. **5xx Guardian Middleware (`src/middlewares/errorGuardian.js`):**
+   - Catches unhandled server/database errors (`500`), duplicate key conflicts (`409`), and malformed JSON payloads (`400`), preventing server crashes.
+5. **Persistent Error Logs (`logs/error.logs`):**
+   - All `4xx` and `5xx` errors are automatically appended to `logs/error.logs` with timestamp, HTTP method, route, status code, reason, and stack trace.
 
