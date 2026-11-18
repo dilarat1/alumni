@@ -1,26 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const pool = require('../db');
 
-// GET / → main page
-router.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>Alumni</title></head>
-      <body>
-        <h1>Alumni System</h1>
-        <p>Welcome to the Alumni tracking system.</p>
-        <nav>
-          <a href="/users">Users (MVC View)</a> |
-          <a href="/announcements">Announcements</a> |
-          <a href="/job-postings">Job Postings (Career)</a> |
-          <a href="/applications">Applications (Dashboard)</a> |
-          <a href="/api/swagger">Swagger Docs</a> |
-          <a href="/about">About</a> |
-          <a href="/api/health">API Health</a>
-        </nav>
-      </body>
-    </html>
-  `);
+// GET / → Homepage (Redesigned with DESIGN.md & brand.md)
+router.get('/', async (req, res, next) => {
+  try {
+    const [[{ users }]] = await pool.query('SELECT COUNT(*) AS users FROM users');
+    const [[{ jobs }]] = await pool.query('SELECT COUNT(*) AS jobs FROM job_postings');
+    const [[{ applications }]] = await pool.query('SELECT COUNT(*) AS applications FROM applications');
+    const [[{ announcements }]] = await pool.query('SELECT COUNT(*) AS announcements FROM announcements');
+
+    res.render('index', {
+      stats: { users, jobs, applications, announcements }
+    });
+  } catch (err) {
+    // Fallback if DB is still initializing
+    res.render('index', {
+      stats: { users: 0, jobs: 0, applications: 0, announcements: 0 }
+    });
+  }
 });
 
 // GET /hello → "Hello, World!"
@@ -41,18 +39,9 @@ router.get('/sum/:number1/:number2', (req, res) => {
   res.send(`${n1 + n2}`);
 });
 
-// GET /about → about page
+// GET /about → About page (Redesigned with DESIGN.md & brand.md)
 router.get('/about', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>About - Alumni</title></head>
-      <body>
-        <h1>About</h1>
-        <p>Alumni tracking system built with Node.js (Express) and MySQL.</p>
-        <a href="/">← Back to Home</a>
-      </body>
-    </html>
-  `);
+  res.render('about');
 });
 
 // GET /404 → Generic 404 page (Step 7)
