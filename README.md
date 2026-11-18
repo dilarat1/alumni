@@ -1,9 +1,29 @@
 # Alumni Management System
 
-A web application for university alumni, users, and announcements tracking built with **Express.js**, **EJS**, **MySQL**, and **Docker**.
+A web application for university alumni, users, career opportunities, and announcements tracking built with **Express.js**, **EJS**, **MySQL**, and **Docker**.
 
-> 📄 **Data Design Documentation:** See the full [Data Design Documentation (DDD.md)](./DDD.md) for detailed schema specifications, ERD, and data dictionary.
+> 🏷️ **Brand Identity (`brand.md`):** See [brand.md](./brand.md) ([Section Anchor: #brand-md](#brand-md)) for brand mission, target personas, voice & tone, and visual identity guidelines.
+> 🎨 **Design System (`DESIGN.md`):** See [DESIGN.md](./DESIGN.md) / [design.md](./design.md) ([Section Anchor: #design-md](#design-md)) — structured following [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) & [styles.refero.design](https://styles.refero.design) — for color tokens, typography, component styling, and layout principles.
+> 📄 **Data Design Documentation (`DDD.md`):** See the full [Data Design Documentation (DDD.md)](./DDD.md) for detailed schema specifications, ERD, and validation rules.
 > 🔑 **Environment Configuration:** See [.example.env](./.example.env) for required environment variables.
+
+---
+
+## 🎨 Brand Identity & Design System
+
+<a id="brand-md"></a>
+### 1. Brand Guidelines — [brand.md](./brand.md)
+Defines the **AlumniConnect** brand identity, mission, vision, graduate & recruiter personas, editorial voice, and brand color signature.
+- 👉 **Read full document:** [<a href="./brand.md">brand.md</a>](./brand.md)
+
+<a id="design-md"></a>
+### 2. Design System Specification — [DESIGN.md](./DESIGN.md)
+Built on the 9-section AI-native design specification from **[github.com/VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md)** and visual references from **[styles.refero.design](https://styles.refero.design)**:
+1. **Visual Theme & Atmosphere:** Editorial SaaS & Academic Precision (`#F8FAFC` Alabaster canvas, `#FFFFFF` cards, frosted-glass sticky topbar).
+2. **Color Palette & Roles:** Bosphorus Obsidian (`#0F172A`), Academic Royal Indigo (`#4F46E5`), Bosphorus Cyan (`#0284C7`), Campus Emerald (`#059669`), Heritage Amber (`#D97706`), Crimson Rose (`#E11D48`).
+3. **Typography Rules:** `Plus Jakarta Sans` (Display/Headings), `Inter` (Body/UI), `JetBrains Mono` (IDs, routes, timestamps).
+4. **Component Stylings, Layout Principles, Depth & Elevation, Do's/Don'ts, Responsive Behavior & Agent Prompt Guide.**
+- 👉 **Read full document:** [<a href="./DESIGN.md">DESIGN.md</a>](./DESIGN.md) | [<a href="./design.md">design.md</a>](./design.md)
 
 ---
 
@@ -17,6 +37,8 @@ alumni/
 ├── Dockerfile                     # Node.js Alpine runtime image
 ├── package.json                   # Dependencies (express, ejs, swagger-ui-express, mysql2, cors)
 ├── init.sql                       # Database initial schema & seeds
+├── brand.md                       # Brand identity, mission, personas & voice guidelines
+├── DESIGN.md                      # UI/UX Design System (VoltAgent/awesome-design-md & Refero Design)
 ├── DDD.md                         # Data Design Documentation, ERD & Domain Validation Rules
 ├── logs/
 │   └── error.logs                 # Persistent 4xx/5xx error log file
